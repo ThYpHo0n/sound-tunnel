@@ -88,7 +88,7 @@ def appleapi_get_playlist_content(source_id, headers):
    for i in range(1, total_requests):
       uri = url+"&offset={}".format(i * 100)
       r = requests.get(uri, headers=headers)
-      return_data = set(return_data + r.json()['data'])
+      return_data.extend(r.json()['data'])
    return return_data
 
 def move_to_apple(apple, playlist_info, dest_id):
