@@ -4,6 +4,7 @@ import spotipy
 from src.mainfuncs import message, what_to_move, compare
 from math import ceil
 from time import sleep
+from tqdm import tqdm
 from config.config import CLIENT_SECRET, CLIENT_ID, REDIRECT_URI, SCOPE
 
 def spotify_auth():
@@ -17,7 +18,7 @@ def spotify_auth():
       sys.exit(0)
    # had to add print(auth_url) to line 435 of /usr/local/lib/python3.10/dist-packages/spotipy/oauth2.py so that the script would print the link
    # why? because wsl2 sucks
-   
+
 def get_spotify_playlists(spotify):
    # Gets user spotify playlists
    user_playlists = spotify.current_user_playlists()
@@ -77,12 +78,12 @@ def spfy_dest_check(spfy_lists, spotify, spfy_id, dest_playlist_name):
       message("s+","Playlist created")
    return dest_playlist_id
 
-def move_to_spfy(spotify, playlist_info, dest_id):
+def move_to_spfy(spotify, playlist_info, dest_id, playlist_name):
    not_found = []
    present_song = get_spfy_playlist_content(spotify, dest_id)
    playlist_info = what_to_move(present_song, playlist_info)
    try:
-      for i in playlist_info:
+      for i in tqdm(playlist_info, desc=f"Moving {playlist_name} to Spotify"):
          i = i.replace("&@#72", " ")
          try:
             search = spotify.search(i, limit=5, type="track")

@@ -30,7 +30,7 @@ def tunnel(source_playlist_name, source, destination, core_sessions):
    if 'apple' in source+destination:
       apple = core_sessions['a'][0]
       apple_lists = core_sessions['a'][1]
-            
+
    if source == 'spotify':
       if source_playlist_name.lower() == "your likes":
          playlist_info = get_spfy_likes(spotify)
@@ -52,16 +52,16 @@ def tunnel(source_playlist_name, source, destination, core_sessions):
 
    if destination == 'youtube':
       dest_playlist_id = yt_dest_check(ytmusic, yt_lists, dest_playlist_name)
-      not_found = move_to_ytmusic(ytmusic, playlist_info, dest_playlist_id)
+      not_found = move_to_ytmusic(ytmusic, playlist_info, dest_playlist_id, source_playlist_name)
    elif destination == 'spotify':
       dest_playlist_id = spfy_dest_check(spfy_lists, spotify, spfy_id, dest_playlist_name)
-      not_found = move_to_spfy(spotify, playlist_info, dest_playlist_id)
+      not_found = move_to_spfy(spotify, playlist_info, dest_playlist_id, source_playlist_name)
    elif destination == 'tidal':
       dest_playlist_id = tidal_dest_check(tidl_lists, tidal, dest_playlist_name)
-      not_found = move_to_tidal(tidal, playlist_info, dest_playlist_id)
+      not_found = move_to_tidal(tidal, playlist_info, dest_playlist_id, source_playlist_name)
    elif destination == 'apple':
       dest_playlist_id = apple_dest_check(apple_lists, apple, dest_playlist_name)
-      not_found = move_to_apple(apple, playlist_info, dest_playlist_id)
+      not_found = move_to_apple(apple, playlist_info, dest_playlist_id, source_playlist_name)
    else:
       print("[-]: {} is an unrecognized destination. Use 'spotify', 'tidal' or 'youtube'".format(destination))
       sys.exit(1)
@@ -139,8 +139,8 @@ def main():
       elif args.source == 'apple':
          for playlist in apple_lists:
             tunnel(playlist, args.source, args.destination, core_sessions)
-       
-def options():     
+
+def options():
    parser = argparse.ArgumentParser(description="Sound Tunnel. Move playlists back and forth between YTmusic, Spotify, Apple and Tidal")
    parser.add_argument('-s','--source',required=True, help="Select source platform (spotify, apple, tidal or youtube) e.g -s spotify")
    parser.add_argument('-d','--destination', help="Select destination platform (spotify,apple, tidal or youtube) e.g -d youtube")
@@ -154,4 +154,4 @@ def options():
    return args
 
 if __name__ == "__main__":
-   main()   
+   main()
