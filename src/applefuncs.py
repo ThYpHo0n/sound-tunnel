@@ -4,6 +4,7 @@ import sys
 import re
 from math import ceil
 from time import sleep
+from tqdm import tqdm
 from src.mainfuncs import message, what_to_move, compare
 from config.config import applefile
 
@@ -91,12 +92,12 @@ def appleapi_get_playlist_content(source_id, headers):
       return_data.extend(r.json()['data'])
    return return_data
 
-def move_to_apple(apple, playlist_info, dest_id):
+def move_to_apple(apple, playlist_info, dest_id, playlist_name):
    not_found = []
    present_song = get_apple_playlist_content(apple, dest_id)
    playlist_info = what_to_move(present_song, playlist_info)
    try:
-      for i in playlist_info:
+      for i in tqdm(playlist_info, desc=f"Moving {playlist_name} to Apple Music"):
          i = i.replace("&@#72"," ")
          search = appleapi_music_search(i, apple)
          if len(list(search['results'].keys())) == 0:

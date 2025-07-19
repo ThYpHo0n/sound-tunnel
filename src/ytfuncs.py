@@ -2,6 +2,7 @@ from ytmusicapi import YTMusic
 from src.mainfuncs import message, what_to_move
 import sys
 from time import sleep
+from tqdm import tqdm
 from config.config import ytfile
 
 def ytmusic_auth():
@@ -13,7 +14,7 @@ def ytmusic_auth():
     except:
         message("y+","Authentication failed")
         sys.exit(0)
-      
+
 def get_youtube_playlists(ytmusic):
    # Gets user youtube music playlists
    user_playlists = ytmusic.get_library_playlists(1000)
@@ -33,7 +34,7 @@ def change_name(ytmusic, yt_lists):
          success = ytmusic.edit_playlist(id,new_name)
          if success == 'STATUS_SUCCEEDED':
             message("y+","Renamed {} to {} to fit new script".format(i,new_name))
-            
+
 def get_yt_playlist_content(ytmusic, source_id):
    playlist_content = ytmusic.get_playlist(source_id)
    result = []
@@ -60,13 +61,13 @@ def yt_dest_check(ytmusic, yt_lists, dest_playlist_name):
       message("y+", "Playlist created")
    return dest_playlist_id
 
-def move_to_ytmusic(ytmusic, playlist_info, dest_id):
+def move_to_ytmusic(ytmusic, playlist_info, dest_id, playlist_name):
    not_found = []
    present_song = get_yt_playlist_content(ytmusic, dest_id)
    playlist_info = what_to_move(present_song, playlist_info)
    not_found = []
    try:
-      for i in playlist_info:
+      for i in tqdm(playlist_info, desc=f"Moving {playlist_name} to YouTube Music"):
          i = i.replace("&", " ")
          search = ytmusic.search(i, "songs")
          songid = [search[0]['videoId']]

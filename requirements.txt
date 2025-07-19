@@ -1,5 +1,5 @@
-spotipy
-ytmusicapi
-argparse
-requests
-tidalapi
+spotipy==2.25.1
+ytmusicapi==1.10.3
+requests==2.32.4
+tidalapi==0.8.4
+tqdm==4.67.1

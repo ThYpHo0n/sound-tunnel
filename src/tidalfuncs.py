@@ -4,6 +4,7 @@ import requests
 import tidalapi
 from time import sleep
 from datetime import datetime
+from tqdm import tqdm
 from src.mainfuncs import message, what_to_move, compare
 from config.config import tidalfile
 
@@ -33,7 +34,7 @@ def tidal_auth():
    except:
       message("t-","Authentication failed")
       sys.exit(0)
-      
+
 def get_tidal_playlists(tidal):
    # Gets user tidal playlists
    user_playlists = tidal.user.playlists()
@@ -47,7 +48,7 @@ def get_tidal_playlists(tidal):
 
 def get_tidal_playlist_content(tidal,source_id):
    playlist = tidal.playlist(source_id)
-   playlist_content = playlist.tracks() 
+   playlist_content = playlist.tracks()
    result = []
    for song in playlist_content:
       song_name = song.name
@@ -69,13 +70,13 @@ def tidal_dest_check(tidl_lists, tidal, dest_playlist_name):
       message("t+","Playlist created")
    return dest_playlist_id
 
-def move_to_tidal(tidal, playlist_info, dest_id):
+def move_to_tidal(tidal, playlist_info, dest_id, playlist_name):
    not_found = []
    present_song = get_tidal_playlist_content(tidal,dest_id)
    playlist_info = what_to_move(present_song, playlist_info)
    not_found = []
    try:
-      for i in playlist_info:
+      for i in tqdm(playlist_info, desc=f"Moving {playlist_name} to Tidal"):
          op = i.replace("&@#72", " ")
          i = ' '.join(i.split("&@#72")[1:])
          search = tidal_search_playlist(i, tidal.access_token)
