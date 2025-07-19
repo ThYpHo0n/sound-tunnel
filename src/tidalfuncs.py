@@ -105,6 +105,10 @@ def move_to_tidal(tidal, playlist_info, dest_id, playlist_name):
             not_found.append(i)
       return not_found
    except:
+   except KeyboardInterrupt:
+      print("\n[!] Operation cancelled by user.")
+      sys.exit(0)
+   except Exception:
       return not_found
 
 

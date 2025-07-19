@@ -112,5 +112,8 @@ def move_to_spfy(spotify, playlist_info, dest_id, playlist_name):
          else:
             not_found.append(i)
       return not_found
+   except KeyboardInterrupt:
+      print("\n[!] Operation cancelled by user.")
+      sys.exit(0)
    except:
       return not_found
