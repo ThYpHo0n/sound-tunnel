@@ -125,6 +125,9 @@ def move_to_apple(apple, playlist_info, dest_id, playlist_name):
          else:
             not_found.append(i)
       return not_found
+   except KeyboardInterrupt:
+      print("\n[!] Operation cancelled by user.")
+      sys.exit(0)
    except Exception:
       return not_found
 
