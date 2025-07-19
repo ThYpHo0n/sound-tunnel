@@ -89,7 +89,7 @@ def move_to_spfy(spotify, playlist_info, dest_id, playlist_name):
             search = spotify.search(i, limit=5, type="track")
          except:
             bk = i
-            i = re.sub("\(.*?\)","",i)
+            i = re.sub(r"\(.*?\)","",i)
             try:
                search = spotify.search(i, limit=5, type="track")
             except:

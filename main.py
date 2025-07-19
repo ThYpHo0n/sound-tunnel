@@ -13,10 +13,7 @@ from src.applefuncs import *
 
 def tunnel(source_playlist_name, source, destination, core_sessions):
    # Carry out basic checks and tunnel
-   if " sound-tunnel" in source_playlist_name:
-      dest_playlist_name = source_playlist_name
-   else:
-      dest_playlist_name = source_playlist_name + " sound-tunnel"
+   dest_playlist_name = source_playlist_name
    if 'spotify' in source+destination:
       spotify = core_sessions['s'][0]
       spfy_lists = core_sessions['s'][1]
@@ -92,7 +89,7 @@ def main():
       core_sessions['t'] = [tidal, tidl_lists]
    if 'apple' in argz:
       apple = apple_auth()
-      apple_lists = get_apple_playlists(apple)
+      apple_lists, _ = get_apple_playlists(apple)
       core_sessions['a'] = [apple, apple_lists]
    if args.L:
       if args.source == "spotify":

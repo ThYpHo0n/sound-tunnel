@@ -30,33 +30,108 @@ def apple_is_logged_in(bearer, media):
    else:
       return False
 
+def appleapi_get_folder_info(folder_id, headers):
+   """Get folder information by folder ID"""
+   url = f"https://amp-api.music.apple.com/v1/me/library/playlists/{folder_id}"
+   r = requests.get(url, headers=headers)
+
+   if r.status_code == 200:
+       data = r.json()
+       if 'data' in data and len(data['data']) > 0:
+           item = data['data'][0]
+           # Apple Music doesn't always mark folders with folder=true
+           # If this item is being referenced as a parent, treat it as a folder
+           if 'attributes' in item and 'name' in item['attributes']:
+               folder_name = item['attributes']['name']
+               return folder_name
+   return None
+
 def appleapi_user_playlists(headers):
-   url = "https://amp-api.music.apple.com/v1/me/library/playlists"
+   url = "https://amp-api.music.apple.com/v1/me/library/playlists?include=parent"
    r = requests.get(url, headers=headers)
    if r.status_code == 200:
       return r.json()
+   return {}
 
 def get_apple_playlists(apple):
-   user_playlists = appleapi_user_playlists(apple)
+   user_playlists_response = appleapi_user_playlists(apple)
    apple_lists = {}
-   for i in user_playlists['data']:
-      playlist_name = i['attributes']['name']
-      playlist_id = i['id']
-      apple_lists[playlist_name] = playlist_id
-   return apple_lists
+   folders = {}
+
+   if 'data' in user_playlists_response:
+       # Find unique parent IDs
+       parent_ids = set()
+       for item in user_playlists_response['data']:
+           if not item.get('attributes', {}).get('folder'):
+               parent_relationship = item.get('relationships', {}).get('parent', {})
+               if parent_relationship and 'data' in parent_relationship and parent_relationship['data']:
+                   parent_id = parent_relationship['data'][0]['id']
+                   if parent_id != 'p.playlistsroot':  # Skip root folder
+                       parent_ids.add(parent_id)
+
+       # Fetch folder information for each parent ID
+       for parent_id in parent_ids:
+           folder_name = appleapi_get_folder_info(parent_id, apple)
+           if folder_name:
+               folders[parent_id] = folder_name
+
+       # Process playlists and assign folder paths
+       for item in user_playlists_response['data']:
+           if not item.get('attributes', {}).get('folder'):
+               playlist_name = item['attributes']['name']
+               playlist_id = item['id']
+
+               parent_relationship = item.get('relationships', {}).get('parent', {})
+               if parent_relationship and 'data' in parent_relationship and parent_relationship['data']:
+                   parent_id = parent_relationship['data'][0]['id']
+                   if parent_id in folders:
+                       playlist_name = f"{folders[parent_id]}/{playlist_name}"
+
+               apple_lists[playlist_name] = playlist_id
+
+   return apple_lists, folders
 
 def apple_dest_check(apple_lists, apple, dest_playlist_name):
    if dest_playlist_name in apple_lists:
       dest_playlist_id = apple_lists[dest_playlist_name]
       message("a+", "Playlist exists, adding missing songs")
+      return dest_playlist_id
+
+   if '/' in dest_playlist_name:
+      folder_name, new_playlist_name = dest_playlist_name.split('/', 1)
+
+      _, folders = get_apple_playlists(apple)
+
+      folder_id = None
+      for id, name in folders.items():
+          if name == folder_name:
+              folder_id = id
+              break
+
+      if folder_id is None:
+         folder_id = appleapi_create_playlist_folder(folder_name, apple)
+         message("a+", f"Created folder {folder_name}")
+
+      dest_playlist_id = appleapi_create_playlist(new_playlist_name, apple, parent_folder_id=folder_id)
+      message("a+", f"Playlist {new_playlist_name} created in folder {folder_name}")
+
    else:
       dest_playlist_id = appleapi_create_playlist(dest_playlist_name, apple)
       message("a+", "Playlist created")
    return dest_playlist_id
 
-def appleapi_create_playlist(playlist_name, headers):
+def appleapi_create_playlist_folder(folder_name, headers):
+   url = "https://amp-api.music.apple.com:443/v1/me/library/playlists"
+   data={"attributes": {"name": folder_name, "folder": True}}
+   r = requests.post(url, headers=headers, json=data)
+   folder_id = r.json()['data'][0]['id']
+   return folder_id
+
+def appleapi_create_playlist(playlist_name, headers, parent_folder_id=None):
    url = "https://amp-api.music.apple.com:443/v1/me/library/playlists"
    data={"attributes": {"name": playlist_name}}
+   if parent_folder_id:
+       data["relationships"] = {"parent": {"data": [{"id": parent_folder_id, "type": "library-playlist-folders"}]}}
    r = requests.post(url, headers=headers, json=data)
    playlist_id = r.json()['data'][0]['id']
    return playlist_id
@@ -102,7 +177,7 @@ def move_to_apple(apple, playlist_info, dest_id, playlist_name):
          search = appleapi_music_search(i, apple)
          if len(list(search['results'].keys())) == 0:
             bk = i
-            i = re.sub("\(.*?\)","",i)
+            i = re.sub(r"\(.*?\)","",i)
             search = appleapi_music_search(i, apple)
             if len(list(search['results'].keys())) == 0:
                not_found.append(bk)
