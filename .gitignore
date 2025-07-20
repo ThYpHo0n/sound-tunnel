@@ -5,3 +5,5 @@ config/__pycache__
 .creds/creds_auth.txt
 .venv
 notfound.txt
+tests/__pycache__/
+.coverage

@@ -16,7 +16,7 @@ Python3 script to transfer playlists across Spotify, Tidal, AppleMusic and Youtu
 ### Spotify
 1. Generate a new app at [https://developer.spotify.com/dashboard/applications)](https://developer.spotify.com/dashboard/applications)
 2. Fill the `redirect_uri` from [config.py](config/config.py) into the new app's settings
-3. Fill in your `client_id` and `client_secret` from your Spotify app into [config.py](config/config.py) file 
+3. Fill in your `client_id` and `client_secret` from your Spotify app into [config.py](config/config.py) file
 
 ### YouTubeMusic
 1. Create the oauth.json file in the `.creds` folder
@@ -61,6 +61,40 @@ python3 main.py --source spotify --destination youtube -P ./myplaylists.txt
 ```sh
 python3 main.py --source spotify --destination youtube -A
 ```
+
+---
+
+## Testing
+
+Sound Tunnel includes comprehensive test suites for all streaming providers. Tests use mocking to avoid requiring actual API credentials.
+
+### Running Tests
+
+```sh
+# Install test dependencies
+pip install -r requirements-test.txt
+
+# Run all tests
+python run_tests.py
+
+# Test specific provider
+python run_tests.py --provider spotify
+
+# Verbose output
+python run_tests.py --verbose
+
+# Generate coverage report
+python run_tests.py --coverage
+```
+
+### Test Coverage
+
+- ✅ **Spotify**: Authentication, playlists, liked songs, migration (12 tests)
+- ✅ **Main Utils**: Message formatting, playlist checking, comparison (21 tests)
+- ⚠️ **YouTube/Tidal/Apple**: Comprehensive tests implemented, minor fixes needed
+
+See [TEST_SUMMARY.md](TEST_SUMMARY.md) for detailed testing information.
+
 ---
 
 ### To-do
