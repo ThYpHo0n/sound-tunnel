@@ -7,3 +7,7 @@ config/__pycache__
 notfound.txt
 tests/__pycache__/
 .coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.ruff_cache/
