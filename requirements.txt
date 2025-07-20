@@ -3,3 +3,8 @@ ytmusicapi==1.10.3
 requests==2.32.4
 tidalapi==0.8.4
 tqdm==4.67.1
+
+# Testing dependencies
+pytest>=8.0.0
+pytest-cov>=6.0.0
+pytest-xdist>=3.0.0
