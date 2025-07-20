@@ -8,15 +8,10 @@ from tqdm import tqdm
 from src.mainfuncs import message, what_to_move, compare
 from config.config import tidalfile
 
-def clear_tidal_folders_cache():
-    """Clear the session folder cache. Call this at the start of a new session."""
-    global _session_folders_cache
-    _session_folders_cache = {}
+# Cache for folders created/found in this session
+_session_folders_cache = {}
 
 def tidal_auth():
-   # Clear folder cache for new session
-   clear_tidal_folders_cache()
-
    # Attempt to authenticate Tidal
    try:
       tidal = tidalapi.Session()
@@ -45,14 +40,12 @@ def tidal_auth():
 
 def get_tidal_playlists(session):
     """Returns a dictionary of playlist names and their IDs, including those in folders."""
-    playlists = {}
-
-    # Get all playlists using the tidalapi library
     user_playlists = session.user.playlists()
+    playlists = {}
     for playlist in user_playlists:
         playlists[playlist.name] = playlist.id
 
-    # Get folders and their playlists using direct API calls
+    # Try to get playlists from folders using direct API calls (more reliable)
     try:
         headers = {
             'Authorization': f'Bearer {session.access_token}',
@@ -60,51 +53,160 @@ def get_tidal_playlists(session):
             'User-Agent': 'TIDAL_ANDROID/1039 okhttp/3.13.1'
         }
 
-        # Get playlist folders from Tidal API
+        # Get existing folders from API
         folders_response = requests.get(
             'https://listen.tidal.com/v2/my-collection/playlists/folders',
             headers=headers,
-            params={'countryCode': 'US', 'locale': 'en_US', 'deviceType': 'BROWSER'}
+            params={'countryCode': 'NG', 'locale': 'en_US', 'deviceType': 'BROWSER'}
         )
 
         if folders_response.status_code == 200:
             folders_data = folders_response.json()
-            for folder in folders_data.get('folders', []):
-                folder_name = folder.get('name')
-                folder_id = folder.get('id')
-                if folder_name and folder_id:
-                    # Get playlists in this folder
-                    playlists_response = requests.get(
-                        f'https://listen.tidal.com/v2/my-collection/playlists/folders/{folder_id}/playlists',
-                        headers=headers,
-                        params={'countryCode': 'US', 'locale': 'en_US', 'deviceType': 'BROWSER'}
-                    )
-                    if playlists_response.status_code == 200:
-                        playlists_data = playlists_response.json()
-                        for playlist_item in playlists_data.get('data', []):
-                            playlist_name = playlist_item.get('name')
-                            playlist_id = playlist_item.get('uuid')
-                            if playlist_name and playlist_id:
-                                playlists[f"{folder_name}/{playlist_name}"] = playlist_id
-        else:
-            print(f"[t!] Could not fetch folders from Tidal API: {folders_response.status_code}")
+            # Look for folders in the items array, not a separate folders array
+            items = folders_data.get('items', [])
+            folders = [item for item in items if item.get('itemType') == 'FOLDER']
 
+            for folder in folders:
+                folder_name = folder.get('name')
+                folder_id = folder.get('data', {}).get('id')  # ID is in the data subobject
+
+                # Cache this folder for future use
+                if folder_name:
+                    try:
+                        folder_obj = session.folder(folder_id)
+                        _session_folders_cache[folder_name] = folder_obj
+                    except Exception as e:
+                        pass
+
+                # Get playlists in this folder
+                try:
+                    folder_obj = session.folder(folder_id)
+                    folder_playlists = folder_obj.items()
+                    for item in folder_playlists:
+                        if hasattr(item, 'name'):  # Check if it's a playlist
+                            folder_playlist_key = f"{folder_name}/{item.name}"
+                            playlists[folder_playlist_key] = item.id
+                except Exception as e:
+                    pass
+        else:
+            pass
     except Exception as e:
-        print(f"[t!] Note: Could not fetch folder playlists via API: {e}")
+        pass
+
+    # Fallback: Try using tidalapi library methods
+    try:
+        user_folders = session.user.folders()
+        for folder in user_folders:
+            folder_name = folder.name
+            # Cache this folder for future use
+            _session_folders_cache[folder_name] = folder
+    except AttributeError as e:
+        pass
+    except Exception as e:
+        pass
 
     return playlists
 
-# Global cache for folders created in this session
-_session_folders_cache = {}
-
-def tidal_dest_check(playlists, session, playlist_name):
+def tidal_dest_check(playlists, session, playlist_name, apple_folders=None):
     """Check if a playlist exists. If not, create it, including in a folder if specified."""
     if playlist_name in playlists:
-        return playlists[playlist_name]
+        dest_playlist_id = playlists[playlist_name]
+        message("t+", "Playlist exists, adding missing songs")
+        return dest_playlist_id
 
-    folder_name, new_playlist_name = playlist_name.split('/', 1) if '/' in playlist_name else (None, playlist_name)
+    # Check if this is a folder/playlist structure from Apple Music
+    if apple_folders and '/' in playlist_name:
+        folder_name, new_playlist_name = playlist_name.split('/', 1)
 
-    if folder_name:
+        # If the folder name exists in Apple Music folders, treat it as folder structure
+        if folder_name in apple_folders.values():
+            # Check if we already created this folder in this session
+            if folder_name in _session_folders_cache:
+                folder_obj = _session_folders_cache[folder_name]
+                message("t+", f"Creating new playlist: {new_playlist_name}")
+                playlist = session.user.create_playlist(new_playlist_name, '')
+                message("t+", f"Adding playlist to existing folder: {folder_name} (from session cache)")
+                try:
+                    folder_obj.add_items([playlist.id])
+                    message("t+", f"Successfully added playlist to existing folder")
+                    # Update the playlists cache
+                    playlists[playlist_name] = playlist.id
+                    return playlist.id
+                except Exception as e:
+                    message("t!", f"Failed to add playlist to cached folder: {e}")
+                    # Continue to try other methods below
+
+            # Check if the folder already exists using direct API calls
+            try:
+                headers = {
+                    'Authorization': f'Bearer {session.access_token}',
+                    'Accept': 'application/json',
+                    'User-Agent': 'TIDAL_ANDROID/1039 okhttp/3.13.1'
+                }
+
+                # Get existing folders from API
+                folders_response = requests.get(
+                    'https://listen.tidal.com/v2/my-collection/playlists/folders',
+                    headers=headers,
+                    params={'countryCode': 'NG', 'locale': 'en_US', 'deviceType': 'BROWSER'}
+                )
+
+                folder_id = None
+                if folders_response.status_code == 200:
+                    folders_data = folders_response.json()
+                    # Look for folders in the items array, not a separate folders array
+                    items = folders_data.get('items', [])
+                    folders = [item for item in items if item.get('itemType') == 'FOLDER']
+                    for folder in folders:
+                        if folder.get('name') == folder_name:
+                            folder_id = folder.get('data', {}).get('id')  # ID is in the data subobject
+                            message("t+", f"Found existing folder via API: {folder_name}")
+                            break
+
+                # Create playlist first
+                message("t+", f"Creating new playlist: {new_playlist_name}")
+                playlist = session.user.create_playlist(new_playlist_name, '')
+
+                if folder_id:
+                    # Folder exists in API, try to use it
+                    try:
+                        folder_obj = session.folder(folder_id)
+                        # Cache this folder for future use
+                        _session_folders_cache[folder_name] = folder_obj
+                        message("t+", f"Adding playlist to existing folder: {folder_name}")
+                        folder_obj.add_items([playlist.id])
+                        message("t+", f"Successfully added playlist to existing folder")
+                        # Update the playlists cache
+                        playlists[playlist_name] = playlist.id
+                        return playlist.id
+                    except Exception as e:
+                        message("t!", f"Failed to add playlist to existing folder: {e}")
+                        # Continue to create new folder
+
+                # Create new folder and add playlist to it
+                message("t+", f"Creating new folder: {folder_name}")
+                folder_obj = session.user.create_folder(title=folder_name)
+                # Cache this folder for future use
+                _session_folders_cache[folder_name] = folder_obj
+                folder_obj.add_items([playlist.id])
+                message("t+", f"Successfully created folder and added playlist")
+
+                # Update the playlists cache
+                playlists[playlist_name] = playlist.id
+                return playlist.id
+
+            except Exception as e:
+                message("t!", f"Warning: Folder operation failed, creating playlist in root: {e}")
+                # Fallback to creating in root
+                dest_playlist_id = tidal_create_playlist(new_playlist_name, "Sound Tunnel playlist", session.access_token)
+                message("t+", "Playlist created in root")
+                playlists[playlist_name] = dest_playlist_id
+                return dest_playlist_id
+
+    # For playlists not in Apple Music folders, check if it has a slash
+    if '/' in playlist_name:
+        folder_name, new_playlist_name = playlist_name.split('/', 1)
+
         # Check if we already created this folder in this session
         if folder_name in _session_folders_cache:
             folder_obj = _session_folders_cache[folder_name]
@@ -114,99 +216,19 @@ def tidal_dest_check(playlists, session, playlist_name):
             try:
                 folder_obj.add_items([playlist.id])
                 message("t+", f"Successfully added playlist to existing folder")
+                # Update the playlists cache
+                playlists[playlist_name] = playlist.id
                 return playlist.id
             except Exception as e:
                 message("t!", f"Failed to add playlist to cached folder: {e}")
-                # Continue to try other methods below
+                # Fall through to create as literal name
 
-        # Check if the folder already exists using direct API calls
-        try:
-            headers = {
-                'Authorization': f'Bearer {session.access_token}',
-                'Accept': 'application/json',
-                'User-Agent': 'TIDAL_ANDROID/1039 okhttp/3.13.1'
-            }
-
-            # Get existing folders from API
-            folders_response = requests.get(
-                'https://listen.tidal.com/v2/my-collection/playlists/folders',
-                headers=headers,
-                params={'countryCode': 'US', 'locale': 'en_US', 'deviceType': 'BROWSER'}
-            )
-
-            folder_id = None
-            if folders_response.status_code == 200:
-                folders_data = folders_response.json()
-                for folder in folders_data.get('folders', []):
-                    if folder.get('name') == folder_name:
-                        folder_id = folder.get('id')
-                        break
-
-            # Create playlist first
-            message("t+", f"Creating new playlist: {new_playlist_name}")
-            playlist = session.user.create_playlist(new_playlist_name, '')
-
-            if folder_id:
-                # Folder exists in API, try to use it
-                try:
-                    folder_obj = session.folder(folder_id)
-                    # Cache this folder for future use
-                    _session_folders_cache[folder_name] = folder_obj
-                    message("t+", f"Adding playlist to existing folder: {folder_name}")
-                    folder_obj.add_items([playlist.id])
-                    message("t+", f"Successfully added playlist to existing folder")
-                    return playlist.id
-                except Exception as e:
-                    message("t!", f"Failed to add playlist to existing folder: {e}")
-                    # Continue to create new folder
-
-            # Folder doesn't exist, create new one
-            try:
-                message("t+", f"Creating new folder: {folder_name}")
-                folder_obj = session.user.create_folder(title=folder_name)
-                # Cache this newly created folder
-                _session_folders_cache[folder_name] = folder_obj
-
-                # Add playlist to the new folder
-                try:
-                    folder_obj.add_items([playlist.id])
-                    message("t+", f"Successfully created folder and added playlist")
-                except Exception as e:
-                    message("t!", f"Warning: Created folder and playlist but failed to link them using tidalapi: {e}")
-                    # Fallback to direct API calls if tidalapi fails
-                    try:
-                        headers['Content-Type'] = 'application/json'
-                        add_to_folder_response = requests.post(
-                            f'https://listen.tidal.com/v2/my-collection/playlists/folders/{folder_obj.id}/playlists',
-                            headers=headers,
-                            params={'countryCode': 'US', 'locale': 'en_US', 'deviceType': 'BROWSER'},
-                            json={'playlistUuids': [playlist.id]}
-                        )
-
-                        if add_to_folder_response.status_code in [200, 201]:
-                            message("t+", f"Successfully created folder and added playlist via API")
-                        else:
-                            message("t!", f"Warning: Created folder and playlist but failed to link them via API: {add_to_folder_response.status_code}")
-                    except Exception:
-                        message("t!", f"Both tidalapi and API methods failed - playlist created in root")
-
-                return playlist.id
-            except Exception as e:
-                # Folder creation failed
-                message("t!", f"Note: Cannot create folder '{folder_name}' using tidalapi ({e}). Playlist '{new_playlist_name}' created in root.")
-                return playlist.id
-
-        except Exception as e:
-            message("t!", f"Note: Folder operations failed ({e}). Creating playlist '{new_playlist_name}' in root.")
-            # Create playlist in root using tidalapi library
-            message("t+", f"Creating new playlist: {new_playlist_name}")
-            playlist = session.user.create_playlist(new_playlist_name, '')
-            return playlist.id
-
-    # Create playlist in root using tidalapi library
-    message("t+", f"Creating new playlist: {playlist_name}")
-    playlist = session.user.create_playlist(playlist_name, '')
-    return playlist.id
+    # Otherwise, treat it as a literal playlist name (including any slashes)
+    dest_playlist_id = tidal_create_playlist(playlist_name, "Sound Tunnel playlist", session.access_token)
+    message("t+", "Playlist created")
+    # Update the playlists cache
+    playlists[playlist_name] = dest_playlist_id
+    return dest_playlist_id
 
 def get_tidal_playlist_content(session, playlist_id):
    playlist = session.playlist(playlist_id)
