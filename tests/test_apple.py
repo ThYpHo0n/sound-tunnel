@@ -30,7 +30,7 @@ class TestAppleFunctions(unittest.TestCase):
         self.mock_headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0",
             "Authorization": "Bearer test_bearer_token",
-            "Media-User-Token": "test_media_token"
+            "Media-User-Token": "test_media_token",
         }
 
         # Mock playlists API response
@@ -40,27 +40,22 @@ class TestAppleFunctions(unittest.TestCase):
                     "id": "p.123",
                     "attributes": {
                         "name": "My Rock Playlist",
-                        "description": {"standard": "Rock music collection"}
+                        "description": {"standard": "Rock music collection"},
                     },
-                    "relationships": {}
+                    "relationships": {},
                 },
                 {
                     "id": "p.456",
                     "attributes": {
                         "name": "Chill Vibes",
-                        "description": {"standard": "Relaxing music"}
+                        "description": {"standard": "Relaxing music"},
                     },
-                    "relationships": {
-                        "parent": {"data": [{"id": "f.789"}]}
-                    }
+                    "relationships": {"parent": {"data": [{"id": "f.789"}]}},
                 },
                 {
                     "id": "f.789",
-                    "attributes": {
-                        "name": "Electronic Music",
-                        "folder": True
-                    }
-                }
+                    "attributes": {"name": "Electronic Music", "folder": True},
+                },
             ]
         }
 
@@ -72,17 +67,17 @@ class TestAppleFunctions(unittest.TestCase):
                     "attributes": {
                         "name": "Bohemian Rhapsody",
                         "albumName": "A Night at the Opera",
-                        "artistName": "Queen"
+                        "artistName": "Queen",
                     }
                 },
                 {
                     "attributes": {
                         "name": "Stairway to Heaven",
                         "albumName": "Led Zeppelin IV",
-                        "artistName": "Led Zeppelin"
+                        "artistName": "Led Zeppelin",
                     }
-                }
-            ]
+                },
+            ],
         }
 
         # Mock search results
@@ -95,8 +90,8 @@ class TestAppleFunctions(unittest.TestCase):
                             "attributes": {
                                 "name": "Bohemian Rhapsody",
                                 "albumName": "A Night at the Opera",
-                                "artistName": "Queen"
-                            }
+                                "artistName": "Queen",
+                            },
                         }
                     ]
                 }
@@ -109,7 +104,7 @@ class TestAppleFunctions(unittest.TestCase):
         """Test successful Apple Music authentication."""
         mock_credentials = {
             "authorization": "Bearer test_token",
-            "media-user-token": "test_media_token"
+            "media-user-token": "test_media_token",
         }
 
         mock_file = Mock()
@@ -119,8 +114,10 @@ class TestAppleFunctions(unittest.TestCase):
 
         mock_is_logged_in.return_value = self.mock_headers
 
-        with patch("json.load", return_value=mock_credentials), \
-             patch("src.applefuncs.message") as mock_message:
+        with (
+            patch("json.load", return_value=mock_credentials),
+            patch("src.applefuncs.message") as mock_message,
+        ):
             result = apple_auth()
 
             self.assertEqual(result, self.mock_headers)
@@ -139,11 +136,13 @@ class TestAppleFunctions(unittest.TestCase):
     @patch("builtins.open")
     @patch("src.applefuncs.apple_is_logged_in")
     @patch("sys.exit")
-    def test_apple_auth_failure_invalid_credentials(self, mock_exit, mock_is_logged_in, mock_open):
+    def test_apple_auth_failure_invalid_credentials(
+        self, mock_exit, mock_is_logged_in, mock_open
+    ):
         """Test Apple Music authentication failure with invalid credentials."""
         mock_credentials = {
             "authorization": "Bearer invalid_token",
-            "media-user-token": "invalid_media_token"
+            "media-user-token": "invalid_media_token",
         }
 
         mock_file = Mock()
@@ -153,8 +152,10 @@ class TestAppleFunctions(unittest.TestCase):
 
         mock_is_logged_in.return_value = False
 
-        with patch("json.load", return_value=mock_credentials), \
-             patch("src.applefuncs.message") as mock_message:
+        with (
+            patch("json.load", return_value=mock_credentials),
+            patch("src.applefuncs.message") as mock_message,
+        ):
             apple_auth()
 
             mock_message.assert_called_with("a-", "Authentication failed")
@@ -193,13 +194,12 @@ class TestAppleFunctions(unittest.TestCase):
         mock_folder_response = Mock()
         mock_folder_response.status_code = 200
         mock_folder_response.json.return_value = {
-            "data": [{
-                "id": "f.789",
-                "attributes": {
-                    "name": "Electronic Music",
-                    "folder": True
+            "data": [
+                {
+                    "id": "f.789",
+                    "attributes": {"name": "Electronic Music", "folder": True},
                 }
-            }]
+            ]
         }
 
         # Mock playlists response
@@ -219,11 +219,9 @@ class TestAppleFunctions(unittest.TestCase):
 
         expected_playlists = {
             "My Rock Playlist": "p.123",
-            "Electronic Music/Chill Vibes": "p.456"
+            "Electronic Music/Chill Vibes": "p.456",
         }
-        expected_folders = {
-            "f.789": "Electronic Music"
-        }
+        expected_folders = {"f.789": "Electronic Music"}
 
         self.assertEqual(playlists, expected_playlists)
         self.assertEqual(folders, expected_folders)
@@ -237,9 +235,9 @@ class TestAppleFunctions(unittest.TestCase):
                     "id": "p.123",
                     "attributes": {
                         "name": "My Rock Playlist",
-                        "description": {"standard": "Rock music collection"}
+                        "description": {"standard": "Rock music collection"},
                     },
-                    "relationships": {}
+                    "relationships": {},
                 }
             ]
         }
@@ -277,7 +275,9 @@ class TestAppleFunctions(unittest.TestCase):
             result = apple_dest_check(playlists, self.mock_headers, "Test Playlist")
 
             self.assertEqual(result, "p.123")
-            mock_message.assert_called_with("a+", "Playlist exists, adding missing songs")
+            mock_message.assert_called_with(
+                "a+", "Playlist exists, adding missing songs"
+            )
 
     @patch("src.applefuncs.appleapi_create_playlist")
     def test_apple_dest_check_create_new_playlist(self, mock_create):
@@ -304,7 +304,7 @@ class TestAppleFunctions(unittest.TestCase):
 
         expected = [
             "A Night at the Opera&@#72Bohemian Rhapsody&@#72Queen",
-            "Led Zeppelin IV&@#72Stairway to Heaven&@#72Led Zeppelin"
+            "Led Zeppelin IV&@#72Stairway to Heaven&@#72Led Zeppelin",
         ]
         self.assertEqual(result, expected)
 
@@ -325,7 +325,9 @@ class TestAppleFunctions(unittest.TestCase):
         """Test handling API failure when retrieving playlist content."""
         mock_response = Mock()
         mock_response.status_code = 404
-        mock_response.json.return_value = {"errors": [{"status": "404", "title": "Not Found"}]}
+        mock_response.json.return_value = {
+            "errors": [{"status": "404", "title": "Not Found"}]
+        }
         mock_get.return_value = mock_response
 
         result = get_apple_playlist_content(self.mock_headers, "p.123")
@@ -337,7 +339,9 @@ class TestAppleFunctions(unittest.TestCase):
     @patch("src.applefuncs.tqdm")
     @patch("src.applefuncs.appleapi_music_search")
     @patch("src.applefuncs.appleapi_add_playlist_item")
-    def test_move_to_apple(self, mock_add_song, mock_search, mock_tqdm, mock_what_to_move, mock_get_content):
+    def test_move_to_apple(
+        self, mock_add_song, mock_search, mock_tqdm, mock_what_to_move, mock_get_content
+    ):
         """Test moving songs to Apple Music playlist."""
         # Mock existing playlist content
         mock_get_content.return_value = []
@@ -345,29 +349,38 @@ class TestAppleFunctions(unittest.TestCase):
         # Mock songs to move
         playlist_info = [
             "A Night at the Opera&@#72Bohemian Rhapsody&@#72Queen",
-            "Imagine&@#72Imagine&@#72John Lennon"
+            "Imagine&@#72Imagine&@#72John Lennon",
         ]
         mock_what_to_move.return_value = playlist_info
 
         # Mock search results
-        mock_search.return_value = {"results": {"song": {"data": [
-            {
-                "id": "song_123",
-                "attributes": {
-                    "name": "Bohemian Rhapsody",
-                    "albumName": "A Night at the Opera",
-                    "artistName": "Queen"
+        mock_search.return_value = {
+            "results": {
+                "song": {
+                    "data": [
+                        {
+                            "id": "song_123",
+                            "attributes": {
+                                "name": "Bohemian Rhapsody",
+                                "albumName": "A Night at the Opera",
+                                "artistName": "Queen",
+                            },
+                        }
+                    ]
                 }
             }
-        ]}}}
+        }
 
         # Mock tqdm to return the input directly
         mock_tqdm.return_value = playlist_info
 
-        with patch("src.applefuncs.compare", return_value=True), \
-             patch("src.applefuncs.sleep"):
-
-            result = move_to_apple(self.mock_headers, playlist_info, "p.123", "Test Playlist")
+        with (
+            patch("src.applefuncs.compare", return_value=True),
+            patch("src.applefuncs.sleep"),
+        ):
+            result = move_to_apple(
+                self.mock_headers, playlist_info, "p.123", "Test Playlist"
+            )
 
             # Should call add song to playlist
             mock_add_song.assert_called()
@@ -376,7 +389,9 @@ class TestAppleFunctions(unittest.TestCase):
     @patch("src.applefuncs.what_to_move")
     @patch("src.applefuncs.tqdm")
     @patch("src.applefuncs.appleapi_music_search")
-    def test_move_to_apple_song_not_found(self, mock_search, mock_tqdm, mock_what_to_move, mock_get_content):
+    def test_move_to_apple_song_not_found(
+        self, mock_search, mock_tqdm, mock_what_to_move, mock_get_content
+    ):
         """Test moving songs to Apple Music when some songs are not found."""
         mock_get_content.return_value = []
 
@@ -387,7 +402,9 @@ class TestAppleFunctions(unittest.TestCase):
         # Mock empty search results
         mock_search.return_value = {"results": {}}
 
-        result = move_to_apple(self.mock_headers, playlist_info, "p.123", "Test Playlist")
+        result = move_to_apple(
+            self.mock_headers, playlist_info, "p.123", "Test Playlist"
+        )
 
         # Should return the song that wasn't found
         self.assertEqual(result, ["Unknown Album Unknown Song Unknown Artist"])
@@ -396,7 +413,9 @@ class TestAppleFunctions(unittest.TestCase):
     @patch("src.applefuncs.what_to_move")
     @patch("src.applefuncs.tqdm")
     @patch("src.applefuncs.appleapi_music_search")
-    def test_move_to_apple_with_parentheses_removal(self, mock_search, mock_tqdm, mock_what_to_move, mock_get_content):
+    def test_move_to_apple_with_parentheses_removal(
+        self, mock_search, mock_tqdm, mock_what_to_move, mock_get_content
+    ):
         """Test moving songs with parentheses removal fallback."""
         mock_get_content.return_value = []
 
@@ -406,23 +425,32 @@ class TestAppleFunctions(unittest.TestCase):
 
         # First search returns empty, second search returns results
         empty_result = {"results": {}}
-        success_result = {"results": {"song": {"data": [
-            {
-                "id": "song_123",
-                "attributes": {
-                    "name": "Song",
-                    "albumName": "Album",
-                    "artistName": "Artist"
+        success_result = {
+            "results": {
+                "song": {
+                    "data": [
+                        {
+                            "id": "song_123",
+                            "attributes": {
+                                "name": "Song",
+                                "albumName": "Album",
+                                "artistName": "Artist",
+                            },
+                        }
+                    ]
                 }
             }
-        ]}}}
+        }
         mock_search.side_effect = [empty_result, success_result]
 
-        with patch("src.applefuncs.compare", return_value=True), \
-             patch("src.applefuncs.sleep"), \
-             patch("src.applefuncs.appleapi_add_playlist_item"):
-
-            result = move_to_apple(self.mock_headers, playlist_info, "p.123", "Test Playlist")
+        with (
+            patch("src.applefuncs.compare", return_value=True),
+            patch("src.applefuncs.sleep"),
+            patch("src.applefuncs.appleapi_add_playlist_item"),
+        ):
+            result = move_to_apple(
+                self.mock_headers, playlist_info, "p.123", "Test Playlist"
+            )
 
             # Should have called search twice (with and without parentheses)
             self.assertEqual(mock_search.call_count, 2)
@@ -430,10 +458,11 @@ class TestAppleFunctions(unittest.TestCase):
     @patch("sys.exit")
     def test_move_to_apple_keyboard_interrupt(self, mock_exit):
         """Test handling keyboard interrupt during move operation."""
-        with patch("src.applefuncs.get_apple_playlist_content", return_value=[]), \
-             patch("src.applefuncs.what_to_move", return_value=["test"]), \
-             patch("src.applefuncs.tqdm", side_effect=KeyboardInterrupt()):
-
+        with (
+            patch("src.applefuncs.get_apple_playlist_content", return_value=[]),
+            patch("src.applefuncs.what_to_move", return_value=["test"]),
+            patch("src.applefuncs.tqdm", side_effect=KeyboardInterrupt()),
+        ):
             move_to_apple(self.mock_headers, ["test"], "p.123", "Test Playlist")
             mock_exit.assert_called_with(0)
 
@@ -444,12 +473,12 @@ class TestAppleFunctions(unittest.TestCase):
 
         mock_response = Mock()
         mock_response.status_code = 201
-        mock_response.json.return_value = {
-            "data": [{"id": "p.new123"}]
-        }
+        mock_response.json.return_value = {"data": [{"id": "p.new123"}]}
         mock_post.return_value = mock_response
 
-        result = appleapi_create_playlist("Test Playlist", "Test Description", self.mock_headers)
+        result = appleapi_create_playlist(
+            "Test Playlist", "Test Description", self.mock_headers
+        )
 
         self.assertEqual(result, "p.new123")
         mock_post.assert_called_once()
@@ -490,13 +519,7 @@ class TestAppleFunctions(unittest.TestCase):
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "data": [
-                {
-                    "attributes": {
-                        "name": "Test Folder"
-                    }
-                }
-            ]
+            "data": [{"attributes": {"name": "Test Folder"}}]
         }
         mock_get.return_value = mock_response
 

@@ -71,7 +71,7 @@ class TestTidalFunctions(unittest.TestCase):
                         "title": "Bohemian Rhapsody",
                         "id": "track_123",
                         "album": {"title": "A Night at the Opera"},
-                        "artists": [{"name": "Queen"}]
+                        "artists": [{"name": "Queen"}],
                     }
                 ]
             }
@@ -83,19 +83,21 @@ class TestTidalFunctions(unittest.TestCase):
                 {
                     "itemType": "FOLDER",
                     "name": "Rock Music",
-                    "data": {"id": "folder_123"}
+                    "data": {"id": "folder_123"},
                 },
                 {
                     "itemType": "FOLDER",
                     "name": "Classical",
-                    "data": {"id": "folder_456"}
-                }
+                    "data": {"id": "folder_456"},
+                },
             ]
         }
 
     @patch("src.tidalfuncs.tidalapi.Session")
     @patch("builtins.open")
-    def test_tidal_auth_success_with_cached_credentials(self, mock_open, mock_session_class):
+    def test_tidal_auth_success_with_cached_credentials(
+        self, mock_open, mock_session_class
+    ):
         """Test successful Tidal authentication with cached credentials."""
         # Mock cached credentials
         future_time = datetime.now() + timedelta(hours=1)
@@ -103,7 +105,7 @@ class TestTidalFunctions(unittest.TestCase):
             "Bearer",
             "access_token_123",
             "refresh_token_456",
-            future_time.strftime("%m/%d/%Y, %H:%M:%S.%f")
+            future_time.strftime("%m/%d/%Y, %H:%M:%S.%f"),
         ]
 
         # Create mock file context manager
@@ -139,8 +141,10 @@ class TestTidalFunctions(unittest.TestCase):
         mock_file_write.__enter__ = Mock(return_value=Mock())
         mock_file_write.__exit__ = Mock(return_value=None)
 
-        with patch("builtins.open", return_value=mock_file_write), \
-             patch("src.tidalfuncs.message") as mock_message:
+        with (
+            patch("builtins.open", return_value=mock_file_write),
+            patch("src.tidalfuncs.message") as mock_message,
+        ):
             result = tidal_auth()
 
             self.assertEqual(result, mock_session)
@@ -155,8 +159,10 @@ class TestTidalFunctions(unittest.TestCase):
         mock_session.check_login.return_value = False
         mock_session_class.return_value = mock_session
 
-        with patch("builtins.open", side_effect=FileNotFoundError), \
-             patch("src.tidalfuncs.message") as mock_message:
+        with (
+            patch("builtins.open", side_effect=FileNotFoundError),
+            patch("src.tidalfuncs.message") as mock_message,
+        ):
             tidal_auth()
 
             mock_message.assert_called_with("t-", "Authentication failed")
@@ -175,7 +181,7 @@ class TestTidalFunctions(unittest.TestCase):
             expected = {
                 "My Tidal Playlist": "tidal_playlist_123",
                 "Rock Collection": "tidal_playlist_456",
-                "Jazz Essentials": "tidal_playlist_789"
+                "Jazz Essentials": "tidal_playlist_789",
             }
             self.assertEqual(result, expected)
 
@@ -220,7 +226,7 @@ class TestTidalFunctions(unittest.TestCase):
         expected = {
             "My Tidal Playlist": "tidal_playlist_123",
             "Rock Collection": "tidal_playlist_456",
-            "Jazz Essentials": "tidal_playlist_789"
+            "Jazz Essentials": "tidal_playlist_789",
         }
         self.assertEqual(result, expected)
 
@@ -234,7 +240,7 @@ class TestTidalFunctions(unittest.TestCase):
 
         expected = [
             "A Night at the Opera&@#72Bohemian Rhapsody&@#72Queen",
-            "Led Zeppelin IV&@#72Stairway to Heaven&@#72Led Zeppelin"
+            "Led Zeppelin IV&@#72Stairway to Heaven&@#72Led Zeppelin",
         ]
         self.assertEqual(result, expected)
 
@@ -273,7 +279,9 @@ class TestTidalFunctions(unittest.TestCase):
             result = tidal_dest_check(playlists, self.mock_tidal, "Test Playlist")
 
             self.assertEqual(result, "playlist_123")
-            mock_message.assert_called_with("t+", "Playlist exists, adding missing songs")
+            mock_message.assert_called_with(
+                "t+", "Playlist exists, adding missing songs"
+            )
 
     @patch("src.tidalfuncs.tidal_create_playlist")
     def test_tidal_dest_check_create_new_playlist(self, mock_create):
@@ -286,7 +294,9 @@ class TestTidalFunctions(unittest.TestCase):
             result = tidal_dest_check(playlists, self.mock_tidal, "New Playlist")
 
             self.assertEqual(result, "new_playlist_123")
-            mock_create.assert_called_with("New Playlist", "Sound Tunnel playlist", "test_token")
+            mock_create.assert_called_with(
+                "New Playlist", "Sound Tunnel playlist", "test_token"
+            )
             mock_message.assert_called_with("t+", "Playlist created")
 
     @patch("requests.get")
@@ -301,11 +311,7 @@ class TestTidalFunctions(unittest.TestCase):
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "items": [
-                {
-                    "itemType": "FOLDER",
-                    "name": "Rock",
-                    "data": {"id": "folder_123"}
-                }
+                {"itemType": "FOLDER", "name": "Rock", "data": {"id": "folder_123"}}
             ]
         }
         mock_get.return_value = mock_response
@@ -319,7 +325,9 @@ class TestTidalFunctions(unittest.TestCase):
         self.mock_tidal.folder.return_value = mock_folder
 
         with patch("src.tidalfuncs.message") as mock_message:
-            result = tidal_dest_check(playlists, self.mock_tidal, "Rock/New Playlist", apple_folders)
+            result = tidal_dest_check(
+                playlists, self.mock_tidal, "Rock/New Playlist", apple_folders
+            )
 
             self.assertEqual(result, "new_playlist_123")
             self.mock_tidal.user.create_playlist.assert_called_with("New Playlist", "")
@@ -330,7 +338,9 @@ class TestTidalFunctions(unittest.TestCase):
     @patch("src.tidalfuncs.tqdm")
     @patch("src.tidalfuncs.tidal_search_playlist")
     @patch("src.tidalfuncs.tidal_add_song_to_playlist")
-    def test_move_to_tidal(self, mock_add_song, mock_search, mock_tqdm, mock_what_to_move, mock_get_content):
+    def test_move_to_tidal(
+        self, mock_add_song, mock_search, mock_tqdm, mock_what_to_move, mock_get_content
+    ):
         """Test moving songs to Tidal playlist."""
         # Mock existing playlist content
         mock_get_content.return_value = []
@@ -338,7 +348,7 @@ class TestTidalFunctions(unittest.TestCase):
         # Mock songs to move
         playlist_info = [
             "A Night at the Opera&@#72Bohemian Rhapsody&@#72Queen",
-            "Imagine&@#72Imagine&@#72John Lennon"
+            "Imagine&@#72Imagine&@#72John Lennon",
         ]
         mock_what_to_move.return_value = playlist_info
 
@@ -350,10 +360,13 @@ class TestTidalFunctions(unittest.TestCase):
 
         self.mock_tidal.access_token = "test_token"
 
-        with patch("src.tidalfuncs.compare", return_value=True), \
-             patch("src.tidalfuncs.sleep"):
-
-            result = move_to_tidal(self.mock_tidal, playlist_info, "playlist_123", "Test Playlist")
+        with (
+            patch("src.tidalfuncs.compare", return_value=True),
+            patch("src.tidalfuncs.sleep"),
+        ):
+            result = move_to_tidal(
+                self.mock_tidal, playlist_info, "playlist_123", "Test Playlist"
+            )
 
             # Should call add song to playlist
             mock_add_song.assert_called()
@@ -362,7 +375,9 @@ class TestTidalFunctions(unittest.TestCase):
     @patch("src.tidalfuncs.what_to_move")
     @patch("src.tidalfuncs.tqdm")
     @patch("src.tidalfuncs.tidal_search_playlist")
-    def test_move_to_tidal_song_not_found(self, mock_search, mock_tqdm, mock_what_to_move, mock_get_content):
+    def test_move_to_tidal_song_not_found(
+        self, mock_search, mock_tqdm, mock_what_to_move, mock_get_content
+    ):
         """Test moving songs to Tidal when some songs are not found."""
         mock_get_content.return_value = []
 
@@ -376,7 +391,9 @@ class TestTidalFunctions(unittest.TestCase):
 
         self.mock_tidal.access_token = "test_token"
 
-        result = move_to_tidal(self.mock_tidal, playlist_info, "playlist_123", "Test Playlist")
+        result = move_to_tidal(
+            self.mock_tidal, playlist_info, "playlist_123", "Test Playlist"
+        )
 
         # Should return the song that wasn't found (the original song name, not the modified one)
         self.assertEqual(result, ["Unknown Song Unknown Artist"])
@@ -385,7 +402,9 @@ class TestTidalFunctions(unittest.TestCase):
     @patch("src.tidalfuncs.what_to_move")
     @patch("src.tidalfuncs.tqdm")
     @patch("src.tidalfuncs.tidal_search_playlist")
-    def test_move_to_tidal_with_parentheses_removal(self, mock_search, mock_tqdm, mock_what_to_move, mock_get_content):
+    def test_move_to_tidal_with_parentheses_removal(
+        self, mock_search, mock_tqdm, mock_what_to_move, mock_get_content
+    ):
         """Test moving songs with parentheses removal fallback."""
         mock_get_content.return_value = []
 
@@ -402,7 +421,9 @@ class TestTidalFunctions(unittest.TestCase):
 
         self.mock_tidal.access_token = "test_token"
 
-        result = move_to_tidal(self.mock_tidal, playlist_info, "playlist_123", "Test Playlist")
+        result = move_to_tidal(
+            self.mock_tidal, playlist_info, "playlist_123", "Test Playlist"
+        )
 
         # Should have called search twice (with and without parentheses)
         self.assertEqual(mock_search.call_count, 2)
@@ -412,10 +433,11 @@ class TestTidalFunctions(unittest.TestCase):
     @patch("sys.exit")
     def test_move_to_tidal_keyboard_interrupt(self, mock_exit):
         """Test handling keyboard interrupt during move operation."""
-        with patch("src.tidalfuncs.get_tidal_playlist_content", return_value=[]), \
-             patch("src.tidalfuncs.what_to_move", return_value=["test"]), \
-             patch("src.tidalfuncs.tqdm", side_effect=KeyboardInterrupt()):
-
+        with (
+            patch("src.tidalfuncs.get_tidal_playlist_content", return_value=[]),
+            patch("src.tidalfuncs.what_to_move", return_value=["test"]),
+            patch("src.tidalfuncs.tqdm", side_effect=KeyboardInterrupt()),
+        ):
             move_to_tidal(self.mock_tidal, ["test"], "playlist_123", "Test Playlist")
             mock_exit.assert_called_with(0)
 
@@ -428,7 +450,9 @@ class TestTidalFunctions(unittest.TestCase):
         mock_response.json.return_value = {"data": {"uuid": "new_playlist_123"}}
         mock_put.return_value = mock_response
 
-        result = tidal_create_playlist("Test Playlist", "Test Description", "test_token")
+        result = tidal_create_playlist(
+            "Test Playlist", "Test Description", "test_token"
+        )
 
         self.assertEqual(result, "new_playlist_123")
         mock_put.assert_called_once()

@@ -27,7 +27,7 @@ class TestMainFunctions(unittest.TestCase):
             "Rock Playlist": "playlist_123",
             "Jazz Collection": "playlist_456",
             "Classical Music ": "playlist_789",  # Note the trailing space
-            "Hip Hop": "playlist_abc"
+            "Hip Hop": "playlist_abc",
         }
 
     @patch("builtins.print")
@@ -64,7 +64,7 @@ class TestMainFunctions(unittest.TestCase):
             call("Rock Playlist"),
             call("Jazz Collection"),
             call("Classical Music "),
-            call("Hip Hop")
+            call("Hip Hop"),
         ]
         mock_print.assert_has_calls(expected_calls, any_order=True)
 
@@ -86,10 +86,14 @@ class TestMainFunctions(unittest.TestCase):
     @patch("src.mainfuncs.message")
     def test_confirm_playlist_exist_not_found(self, mock_message):
         """Test when playlist doesn't exist."""
-        result = confirm_playlist_exist("Nonexistent Playlist", self.playlists, "spotify")
+        result = confirm_playlist_exist(
+            "Nonexistent Playlist", self.playlists, "spotify"
+        )
 
         self.assertIsNone(result)
-        mock_message.assert_called_with("s+", "Selected Nonexistent Playlist Playlist does not exist")
+        mock_message.assert_called_with(
+            "s+", "Selected Nonexistent Playlist Playlist does not exist"
+        )
 
     @patch("src.mainfuncs.message")
     def test_confirm_playlist_exist_no_platform(self, mock_message):
@@ -97,7 +101,9 @@ class TestMainFunctions(unittest.TestCase):
         result = confirm_playlist_exist("Nonexistent Playlist", self.playlists)
 
         self.assertIsNone(result)
-        mock_message.assert_called_with("s+", "Selected Nonexistent Playlist Playlist does not exist")
+        mock_message.assert_called_with(
+            "s+", "Selected Nonexistent Playlist Playlist does not exist"
+        )
 
     def test_what_to_move_all_new(self):
         """Test what_to_move when all songs are new."""
@@ -175,7 +181,9 @@ class TestMainFunctions(unittest.TestCase):
     def test_compare_partial_match(self):
         """Test compare function with partial match above threshold."""
         # Both have common words but different enough
-        result = compare("Queen Bohemian Rhapsody Rock", "Queen Another One Bites Dust Rock")
+        result = compare(
+            "Queen Bohemian Rhapsody Rock", "Queen Another One Bites Dust Rock"
+        )
         # This might pass or fail depending on the similarity - testing the actual behavior
         # The function should return consistent results
 

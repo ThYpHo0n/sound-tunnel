@@ -42,7 +42,7 @@ class TestYoutubeFunctions(unittest.TestCase):
             {
                 "title": "spfy2yt Old Playlist",
                 "playlistId": "PLrAUCsHkE_old789",
-            }
+            },
         ]
 
         # Mock playlist content
@@ -51,17 +51,17 @@ class TestYoutubeFunctions(unittest.TestCase):
                 {
                     "title": "Bohemian Rhapsody",
                     "album": {"name": "A Night at the Opera"},
-                    "artists": [{"name": "Queen"}]
+                    "artists": [{"name": "Queen"}],
                 },
                 {
                     "title": "Stairway to Heaven",
                     "album": {"name": "Led Zeppelin IV"},
-                    "artists": [{"name": "Led Zeppelin"}]
+                    "artists": [{"name": "Led Zeppelin"}],
                 },
                 {
                     "title": "Song Without Album",
-                    "artists": [{"name": "Unknown Artist"}]
-                }
+                    "artists": [{"name": "Unknown Artist"}],
+                },
             ]
         }
 
@@ -71,7 +71,7 @@ class TestYoutubeFunctions(unittest.TestCase):
                 "title": "Bohemian Rhapsody",
                 "videoId": "dQw4w9WgXcQ",
                 "album": {"name": "A Night at the Opera"},
-                "artists": [{"name": "Queen"}]
+                "artists": [{"name": "Queen"}],
             }
         ]
 
@@ -101,14 +101,16 @@ class TestYoutubeFunctions(unittest.TestCase):
 
     def test_get_youtube_playlists(self):
         """Test retrieving YouTube Music playlists."""
-        self.mock_ytmusic.get_library_playlists.return_value = self.mock_playlists_response
+        self.mock_ytmusic.get_library_playlists.return_value = (
+            self.mock_playlists_response
+        )
 
         result = get_youtube_playlists(self.mock_ytmusic)
 
         expected = {
             "My Rock Playlist": "PLrAUCsHkE_rock123",
             "Chill Music": "PLrAUCsHkE_chill456",
-            "spfy2yt Old Playlist": "PLrAUCsHkE_old789"
+            "spfy2yt Old Playlist": "PLrAUCsHkE_old789",
         }
         self.assertEqual(result, expected)
         self.mock_ytmusic.get_library_playlists.assert_called_once_with(1000)
@@ -125,7 +127,7 @@ class TestYoutubeFunctions(unittest.TestCase):
         """Test changing old spfy2yt playlist names to sound-tunnel."""
         yt_lists = {
             "spfy2yt Old Playlist": "PLrAUCsHkE_old789",
-            "Normal Playlist": "PLrAUCsHkE_normal123"
+            "Normal Playlist": "PLrAUCsHkE_normal123",
         }
 
         self.mock_ytmusic.edit_playlist.return_value = "STATUS_SUCCEEDED"
@@ -137,14 +139,15 @@ class TestYoutubeFunctions(unittest.TestCase):
                 "PLrAUCsHkE_old789", "sound-tunnel Old Playlist"
             )
             mock_message.assert_called_with(
-                "y+", "Renamed spfy2yt Old Playlist to sound-tunnel Old Playlist to fit new script"
+                "y+",
+                "Renamed spfy2yt Old Playlist to sound-tunnel Old Playlist to fit new script",
             )
 
     def test_change_name_no_spfy2yt_playlists(self):
         """Test change_name when no spfy2yt playlists exist."""
         yt_lists = {
             "Normal Playlist": "PLrAUCsHkE_normal123",
-            "Another Playlist": "PLrAUCsHkE_another456"
+            "Another Playlist": "PLrAUCsHkE_another456",
         }
 
         change_name(self.mock_ytmusic, yt_lists)
@@ -160,7 +163,7 @@ class TestYoutubeFunctions(unittest.TestCase):
         expected = [
             "A Night at the Opera&Bohemian Rhapsody&Queen",
             "Led Zeppelin IV&Stairway to Heaven&Led Zeppelin",
-            "&Song Without Album&Unknown Artist"
+            "&Song Without Album&Unknown Artist",
         ]
         self.assertEqual(result, expected)
         self.mock_ytmusic.get_playlist.assert_called_once_with("PLrAUCsHkE_test123")
@@ -172,7 +175,7 @@ class TestYoutubeFunctions(unittest.TestCase):
                 {
                     "title": "Under Pressure",
                     "album": {"name": "Hot Space"},
-                    "artists": [{"name": "Queen"}, {"name": "David Bowie"}]
+                    "artists": [{"name": "Queen"}, {"name": "David Bowie"}],
                 }
             ]
         }
@@ -191,7 +194,9 @@ class TestYoutubeFunctions(unittest.TestCase):
             result = yt_dest_check(self.mock_ytmusic, yt_lists, "Test Playlist")
 
             self.assertEqual(result, "PLrAUCsHkE_test123")
-            mock_message.assert_called_with("y+", "Playlist exists, adding missing songs")
+            mock_message.assert_called_with(
+                "y+", "Playlist exists, adding missing songs"
+            )
 
     def test_yt_dest_check_create_new_playlist(self):
         """Test creating new playlist when it doesn't exist."""
@@ -218,7 +223,7 @@ class TestYoutubeFunctions(unittest.TestCase):
         # Mock songs to move
         playlist_info = [
             "A Night at the Opera&Bohemian Rhapsody&Queen",
-            "Imagine&Imagine&John Lennon"
+            "Imagine&Imagine&John Lennon",
         ]
         mock_what_to_move.return_value = playlist_info
 
@@ -232,7 +237,9 @@ class TestYoutubeFunctions(unittest.TestCase):
         self.mock_ytmusic.add_playlist_items.return_value = "STATUS_SUCCEEDED"
 
         with patch("src.ytfuncs.sleep"):
-            result = move_to_ytmusic(self.mock_ytmusic, playlist_info, "PLrAUCsHkE_test123", "Test Playlist")
+            result = move_to_ytmusic(
+                self.mock_ytmusic, playlist_info, "PLrAUCsHkE_test123", "Test Playlist"
+            )
 
             # Should call add_playlist_items
             self.mock_ytmusic.add_playlist_items.assert_called()
@@ -240,7 +247,9 @@ class TestYoutubeFunctions(unittest.TestCase):
     @patch("src.ytfuncs.get_yt_playlist_content")
     @patch("src.ytfuncs.what_to_move")
     @patch("src.ytfuncs.tqdm")
-    def test_move_to_ytmusic_song_not_found(self, mock_tqdm, mock_what_to_move, mock_get_content):
+    def test_move_to_ytmusic_song_not_found(
+        self, mock_tqdm, mock_what_to_move, mock_get_content
+    ):
         """Test moving songs to YouTube Music when some songs are not found."""
         mock_get_content.return_value = []
 
@@ -251,7 +260,9 @@ class TestYoutubeFunctions(unittest.TestCase):
         # Mock search that returns empty results (will cause IndexError)
         self.mock_ytmusic.search.return_value = []
 
-        result = move_to_ytmusic(self.mock_ytmusic, playlist_info, "PLrAUCsHkE_test123", "Test Playlist")
+        result = move_to_ytmusic(
+            self.mock_ytmusic, playlist_info, "PLrAUCsHkE_test123", "Test Playlist"
+        )
 
         # Should return not_found list due to exception handling
         self.assertEqual(result, [])
@@ -259,7 +270,9 @@ class TestYoutubeFunctions(unittest.TestCase):
     @patch("src.ytfuncs.get_yt_playlist_content")
     @patch("src.ytfuncs.what_to_move")
     @patch("src.ytfuncs.tqdm")
-    def test_move_to_ytmusic_add_failure(self, mock_tqdm, mock_what_to_move, mock_get_content):
+    def test_move_to_ytmusic_add_failure(
+        self, mock_tqdm, mock_what_to_move, mock_get_content
+    ):
         """Test moving songs when add operation fails."""
         mock_get_content.return_value = []
 
@@ -272,7 +285,9 @@ class TestYoutubeFunctions(unittest.TestCase):
         self.mock_ytmusic.add_playlist_items.return_value = "FAILED"
 
         with patch("src.ytfuncs.sleep"):
-            result = move_to_ytmusic(self.mock_ytmusic, playlist_info, "PLrAUCsHkE_test123", "Test Playlist")
+            result = move_to_ytmusic(
+                self.mock_ytmusic, playlist_info, "PLrAUCsHkE_test123", "Test Playlist"
+            )
 
             # Should return the song that failed to add
             self.assertEqual(result, ["Album Song Artist"])
@@ -280,11 +295,14 @@ class TestYoutubeFunctions(unittest.TestCase):
     @patch("sys.exit")
     def test_move_to_ytmusic_keyboard_interrupt(self, mock_exit):
         """Test handling keyboard interrupt during move operation."""
-        with patch("src.ytfuncs.get_yt_playlist_content", return_value=[]), \
-             patch("src.ytfuncs.what_to_move", return_value=["test"]), \
-             patch("src.ytfuncs.tqdm", side_effect=KeyboardInterrupt()):
-
-            move_to_ytmusic(self.mock_ytmusic, ["test"], "PLrAUCsHkE_test123", "Test Playlist")
+        with (
+            patch("src.ytfuncs.get_yt_playlist_content", return_value=[]),
+            patch("src.ytfuncs.what_to_move", return_value=["test"]),
+            patch("src.ytfuncs.tqdm", side_effect=KeyboardInterrupt()),
+        ):
+            move_to_ytmusic(
+                self.mock_ytmusic, ["test"], "PLrAUCsHkE_test123", "Test Playlist"
+            )
             mock_exit.assert_called_with(0)
 
 
