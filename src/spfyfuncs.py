@@ -1,11 +1,14 @@
-import sys
 import re
-import spotipy
-from src.mainfuncs import message, what_to_move, compare
+import sys
 from math import ceil
 from time import sleep
+
+import spotipy
 from tqdm import tqdm
-from config.config import CLIENT_SECRET, CLIENT_ID, REDIRECT_URI, SCOPE
+
+from config.config import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, SCOPE
+from src.mainfuncs import compare, message, what_to_move
+
 
 def spotify_auth():
 # Attempt to authenticate Spotify
@@ -24,9 +27,9 @@ def get_spotify_playlists(spotify):
    user_playlists = spotify.current_user_playlists()
    spfy_lists = {}
    try:
-      for i in user_playlists['items']:
-         playlist_name = i['name']
-         playlist_id = i['id']
+      for i in user_playlists["items"]:
+         playlist_name = i["name"]
+         playlist_id = i["id"]
          # Add playlist name and ids to dictionary
          spfy_lists[playlist_name] = playlist_id
    except:
@@ -37,34 +40,34 @@ def get_spotify_playlists(spotify):
 def get_spfy_likes(spotify):
    # Gets track on spotify liked list
    test_likes = spotify.current_user_saved_tracks(limit=50)
-   no_of_liked_songs = test_likes['total']
+   no_of_liked_songs = test_likes["total"]
    total_requests = ceil(no_of_liked_songs/50)
    result = []
    for i in range(total_requests):
       like = spotify.current_user_saved_tracks(limit=50, offset=50*i)
-      for song in like['items']:
-         song_name = song['track']['name']
-         album_name = song['track']['album']['name']
+      for song in like["items"]:
+         song_name = song["track"]["name"]
+         album_name = song["track"]["album"]["name"]
          artist_name = []
-         for i in song['track']['artists']:
-            artist = i['name']
+         for i in song["track"]["artists"]:
+            artist = i["name"]
             artist_name.append(artist)
-         artist = ' '.join(artist_name)
+         artist = " ".join(artist_name)
          result.append(album_name+"&@#72"+song_name+"&@#72"+artist)
    return result
 
 def get_spfy_playlist_content(spotify, source_id):
    # Gets track on spotify playlist
-   playlist_content = spotify.playlist_items('spotify:playlist:{}'.format(source_id))
+   playlist_content = spotify.playlist_items(f"spotify:playlist:{source_id}")
    result = []
-   for song in playlist_content['items']:
-      song_name = song['track']['name']
-      album_name = song['track']['album']['name']
+   for song in playlist_content["items"]:
+      song_name = song["track"]["name"]
+      album_name = song["track"]["album"]["name"]
       artist_name = []
-      for i in song['track']['artists']:
-         artist = i['name']
+      for i in song["track"]["artists"]:
+         artist = i["name"]
          artist_name.append(artist)
-      artist = ' '.join(artist_name)
+      artist = " ".join(artist_name)
       result.append(album_name+"&@#72"+song_name+"&@#72"+artist)
    return result
 
@@ -73,8 +76,8 @@ def spfy_dest_check(spfy_lists, spotify, spfy_id, dest_playlist_name):
       dest_playlist_id = spfy_lists[dest_playlist_name]
       message("s+","Playlist exists, adding missing songs")
    else:
-      create_playlist = spotify.user_playlist_create(spfy_id, dest_playlist_name, public=False, collaborative=False, description='Sound Tunnel Playlist')
-      dest_playlist_id = create_playlist['id']
+      create_playlist = spotify.user_playlist_create(spfy_id, dest_playlist_name, public=False, collaborative=False, description="Sound Tunnel Playlist")
+      dest_playlist_id = create_playlist["id"]
       message("s+","Playlist created")
    return dest_playlist_id
 
@@ -95,16 +98,16 @@ def move_to_spfy(spotify, playlist_info, dest_id, playlist_name):
             except:
                not_found.append(bk)
                continue
-         for song in search['tracks']['items']:
-            album_name = song['album']['name']
-            song_name = song['name']
+         for song in search["tracks"]["items"]:
+            album_name = song["album"]["name"]
+            song_name = song["name"]
             artist_name = []
-            for j in song['artists']:
-               artist = j['name']
+            for j in song["artists"]:
+               artist = j["name"]
                artist_name.append(artist)
-            artist = ' '.join(artist_name)
+            artist = " ".join(artist_name)
             found = album_name+" "+song_name+" "+artist
-            songid = [song['id']]
+            songid = [song["id"]]
             if compare(found, i):
                sleep(0.5)
                spotify.playlist_add_items(dest_id, songid)

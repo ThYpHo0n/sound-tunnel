@@ -1,9 +1,12 @@
-from ytmusicapi import YTMusic
-from src.mainfuncs import message, what_to_move
 import sys
 from time import sleep
+
 from tqdm import tqdm
+from ytmusicapi import YTMusic
+
 from config.config import ytfile
+from src.mainfuncs import message, what_to_move
+
 
 def ytmusic_auth():
     # Attempt to authenticate Youtube music
@@ -20,8 +23,8 @@ def get_youtube_playlists(ytmusic):
    user_playlists = ytmusic.get_library_playlists(1000)
    yt_lists = {}
    for i in user_playlists:
-      playlist_name = i['title']
-      playlist_id = i['playlistId']
+      playlist_name = i["title"]
+      playlist_id = i["playlistId"]
       yt_lists[playlist_name] = playlist_id
    return yt_lists
 
@@ -32,23 +35,23 @@ def change_name(ytmusic, yt_lists):
          new_name = i.replace("spfy2yt","sound-tunnel")
          id = yt_lists[i]
          success = ytmusic.edit_playlist(id,new_name)
-         if success == 'STATUS_SUCCEEDED':
-            message("y+","Renamed {} to {} to fit new script".format(i,new_name))
+         if success == "STATUS_SUCCEEDED":
+            message("y+",f"Renamed {i} to {new_name} to fit new script")
 
 def get_yt_playlist_content(ytmusic, source_id):
    playlist_content = ytmusic.get_playlist(source_id)
    result = []
-   for song in playlist_content['tracks']:
-      song_name = song['title']
+   for song in playlist_content["tracks"]:
+      song_name = song["title"]
       try:
-         album_name = song['album']['name']
+         album_name = song["album"]["name"]
       except:
          album_name = ""
       artist_name = []
-      for i in song['artists']:
-         artist = i['name']
+      for i in song["artists"]:
+         artist = i["name"]
          artist_name.append(artist)
-      artist = ' '.join(artist_name)
+      artist = " ".join(artist_name)
       result.append(album_name+"&"+song_name+"&"+artist)
    return result
 
@@ -70,7 +73,7 @@ def move_to_ytmusic(ytmusic, playlist_info, dest_id, playlist_name):
       for i in tqdm(playlist_info, desc=f"Moving {playlist_name} to YouTube Music"):
          i = i.replace("&", " ")
          search = ytmusic.search(i, "songs")
-         songid = [search[0]['videoId']]
+         songid = [search[0]["videoId"]]
          sleep(0.5)
          add_success = ytmusic.add_playlist_items(dest_id, songid)
          # Didn't add compare since yt has everything and has good search algo

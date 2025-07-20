@@ -1,10 +1,11 @@
 import json
 from difflib import SequenceMatcher
 
+
 def message(bit, msg):
    code = bit[1]
    plat = bit[0]
-   output = "[{}] ".format(code)
+   output = f"[{code}] "
    if plat.lower() == "s":
       output = output + "Spotify: "
    elif plat.lower() == "y":
@@ -41,7 +42,7 @@ def confirm_playlist_exist(source_playlist_name, plat_list, platform=""):
 
    # Get platform code for error message
    platform_code = platform[:1].lower() + "+" if platform else "s+"
-   message(platform_code, "Selected {} Playlist does not exist".format(source_playlist_name))
+   message(platform_code, f"Selected {source_playlist_name} Playlist does not exist")
    return None
 
 def what_to_move(old, new):
@@ -54,14 +55,13 @@ def compare(first, second):
    #if match is less than 45%, not a match
    if match > 0.45:
       return True
-   else:
-      return False
+   return False
 
 def write_to_file(play_name, songs, source, dest):
    # Write not found songs to file
-   key = "{}->{} '{}'".format(source, dest, play_name)
+   key = f"{source}->{dest} '{play_name}'"
    content = {key: songs}
-   with open('notfound.txt', 'a') as file:
+   with open("notfound.txt", "a") as file:
       file.write(json.dumps(content))
       file.write("\n")
 

@@ -9,7 +9,7 @@ CLIENT_SECRET = ""
 # Option 2
 # REDIRECT_URI can be set to a random website (make sure it's a nonexistent website else the website's owner
 # will probably see your access code in their logs, not a smart move)
-# 
+#
 # MAKE SURE THE SAME REDIRECT URI SET HERE IS ALSO SET ON YOUR SPOTIPY DASHBOARD
 REDIRECT_URI = "http://localhost:9000/callback/"
 
