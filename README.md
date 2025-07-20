@@ -1,4 +1,8 @@
 ![Sound-tunnel gif](sound--tunnel.gif)
+
+[![Tests](https://github.com/ThYpHo0n/sound-tunnel/actions/workflows/test.yml/badge.svg)](https://github.com/ThYpHo0n/sound-tunnel/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/ThYpHo0n/sound-tunnel/branch/main/graph/badge.svg)](https://codecov.io/gh/ThYpHo0n/sound-tunnel)
+
 # Sound-tunnel
 Python3 script to transfer playlists across Spotify, Tidal, AppleMusic and Youtube-Music
 
@@ -68,32 +72,31 @@ python3 main.py --source spotify --destination youtube -A
 
 Sound Tunnel includes comprehensive test suites for all streaming providers. Tests use mocking to avoid requiring actual API credentials.
 
-### Running Tests
+### Running Tests Locally
 
 ```sh
-# Install test dependencies
-pip install -r requirements-test.txt
-
 # Run all tests
-python run_tests.py
+pytest tests/
 
 # Test specific provider
-python run_tests.py --provider spotify
-
-# Verbose output
-python run_tests.py --verbose
-
-# Generate coverage report
-python run_tests.py --coverage
+pytest -m spotify
 ```
 
-### Test Coverage
+### Code Quality (Linting & Formatting)
 
-- ✅ **Spotify**: Authentication, playlists, liked songs, migration (12 tests)
-- ✅ **Main Utils**: Message formatting, playlist checking, comparison (21 tests)
-- ⚠️ **YouTube/Tidal/Apple**: Comprehensive tests implemented, minor fixes needed
+```sh
+# Check code style and potential issues
+ruff check .
 
-See [TEST_SUMMARY.md](TEST_SUMMARY.md) for detailed testing information.
+# Auto-fix issues where possible
+ruff check . --fix
+
+# Check code formatting
+ruff format --check .
+
+# Auto-format code
+ruff format .
+```
 
 ---
 
