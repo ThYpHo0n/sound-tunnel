@@ -71,17 +71,17 @@ class TestMainFunctions(unittest.TestCase):
     def test_confirm_playlist_exist_exact_match(self):
         """Test confirming playlist exists with exact match."""
         result = confirm_playlist_exist("Rock Playlist", self.playlists, "spotify")
-        self.assertEqual(result, "playlist_123")
+        assert result == "playlist_123"
 
     def test_confirm_playlist_exist_with_trailing_space(self):
         """Test confirming playlist exists when playlist has trailing space."""
         result = confirm_playlist_exist("Classical Music", self.playlists, "spotify")
-        self.assertEqual(result, "playlist_789")
+        assert result == "playlist_789"
 
     def test_confirm_playlist_exist_remove_trailing_space(self):
         """Test confirming playlist exists by removing trailing space from query."""
         result = confirm_playlist_exist("Hip Hop ", self.playlists, "spotify")
-        self.assertEqual(result, "playlist_abc")
+        assert result == "playlist_abc"
 
     @patch("src.mainfuncs.message")
     def test_confirm_playlist_exist_not_found(self, mock_message):
@@ -90,7 +90,7 @@ class TestMainFunctions(unittest.TestCase):
             "Nonexistent Playlist", self.playlists, "spotify"
         )
 
-        self.assertIsNone(result)
+        assert result is None
         mock_message.assert_called_with(
             "s+", "Selected Nonexistent Playlist Playlist does not exist"
         )
@@ -100,7 +100,7 @@ class TestMainFunctions(unittest.TestCase):
         """Test playlist not found with no platform specified."""
         result = confirm_playlist_exist("Nonexistent Playlist", self.playlists)
 
-        self.assertIsNone(result)
+        assert result is None
         mock_message.assert_called_with(
             "s+", "Selected Nonexistent Playlist Playlist does not exist"
         )
@@ -113,7 +113,7 @@ class TestMainFunctions(unittest.TestCase):
         result = what_to_move(old_songs, new_songs)
 
         expected = ["Song3", "Song4", "Song5"]
-        self.assertEqual(sorted(result), sorted(expected))
+        assert sorted(result) == sorted(expected)
 
     def test_what_to_move_some_overlap(self):
         """Test what_to_move when some songs already exist."""
@@ -123,7 +123,7 @@ class TestMainFunctions(unittest.TestCase):
         result = what_to_move(old_songs, new_songs)
 
         expected = ["Song3", "Song4"]
-        self.assertEqual(sorted(result), sorted(expected))
+        assert sorted(result) == sorted(expected)
 
     def test_what_to_move_no_new_songs(self):
         """Test what_to_move when no new songs to add."""
@@ -132,7 +132,7 @@ class TestMainFunctions(unittest.TestCase):
 
         result = what_to_move(old_songs, new_songs)
 
-        self.assertEqual(result, [])
+        assert result == []
 
     def test_what_to_move_duplicates_in_new(self):
         """Test what_to_move with duplicates in new songs list."""
@@ -142,46 +142,46 @@ class TestMainFunctions(unittest.TestCase):
         result = what_to_move(old_songs, new_songs)
 
         expected = ["Song2", "Song3"]
-        self.assertEqual(sorted(result), sorted(expected))
+        assert sorted(result) == sorted(expected)
 
     def test_compare_exact_match(self):
         """Test compare function with exact match."""
         result = compare("Bohemian Rhapsody Queen", "Bohemian Rhapsody Queen")
-        self.assertTrue(result)
+        assert result
 
     def test_compare_high_similarity(self):
         """Test compare function with high similarity."""
         # Test with slight variation (should be similar enough with 0.45 threshold)
         result = compare("Bohemian Rhapsody Queen", "Bohemian Rhapsody - Queen")
         # The actual threshold is 0.45, so this should pass
-        self.assertTrue(result)
+        assert result
 
     def test_compare_low_similarity(self):
         """Test compare function with low similarity."""
         result = compare("Bohemian Rhapsody Queen", "Stairway to Heaven Led Zeppelin")
-        self.assertFalse(result)
+        assert not result
 
     def test_compare_case_insensitive(self):
         """Test compare function is case insensitive."""
         # The compare function doesn't actually handle case sensitivity
         # It compares strings directly using SequenceMatcher
         result = compare("BOHEMIAN RHAPSODY QUEEN", "BOHEMIAN RHAPSODY QUEEN")
-        self.assertTrue(result)
+        assert result
 
     def test_compare_with_extra_spaces(self):
         """Test compare function handles extra spaces."""
         result = compare("Bohemian  Rhapsody   Queen", "Bohemian Rhapsody Queen")
-        self.assertTrue(result)
+        assert result
 
     def test_compare_with_special_characters(self):
         """Test compare function handles special characters."""
         result = compare("Don't Stop Me Now Queen", "Don't Stop Me Now Queen")
-        self.assertTrue(result)
+        assert result
 
     def test_compare_partial_match(self):
         """Test compare function with partial match above threshold."""
         # Both have common words but different enough
-        result = compare(
+        compare(
             "Queen Bohemian Rhapsody Rock", "Queen Another One Bites Dust Rock"
         )
         # This might pass or fail depending on the similarity - testing the actual behavior

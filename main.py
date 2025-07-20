@@ -4,13 +4,46 @@ Sound Tunnel
 """
 
 import argparse
+import sys
 from os.path import abspath
 
-from src.applefuncs import *
-from src.mainfuncs import *
-from src.spfyfuncs import *
-from src.tidalfuncs import *
-from src.ytfuncs import *
+from src.applefuncs import (
+    apple_auth,
+    apple_dest_check,
+    get_apple_playlist_content,
+    get_apple_playlists,
+    move_to_apple,
+)
+from src.mainfuncs import (
+    confirm_playlist_exist,
+    display_playlists,
+    message,
+    report_sync_summary,
+    write_to_file,
+)
+from src.spfyfuncs import (
+    get_spfy_likes,
+    get_spfy_playlist_content,
+    get_spotify_playlists,
+    move_to_spfy,
+    spfy_dest_check,
+    spotify_auth,
+)
+from src.tidalfuncs import (
+    get_tidal_playlist_content,
+    get_tidal_playlists,
+    move_to_tidal,
+    tidal_auth,
+    tidal_dest_check,
+)
+from src.ytfuncs import (
+    change_name,
+    get_youtube_playlists,
+    get_yt_playlist_content,
+    move_to_ytmusic,
+    yt_dest_check,
+    ytmusic_auth,
+)
 
 
 def tunnel(source_playlist_name, source, destination, core_sessions):
@@ -162,7 +195,7 @@ def main():
             with open(file_path) as ff:
                 for line in ff:
                     playlist_names.append(line.strip())
-        except:
+        except FileNotFoundError:
             print(f"[-] : {file_path} does not exist")
             sys.exit(1)
         total_not_found = 0
@@ -224,8 +257,7 @@ def options():
         action="store_true",
         help="Show user Playlists for Spotify, Tidal or Youtube",
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

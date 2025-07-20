@@ -120,7 +120,7 @@ class TestAppleFunctions(unittest.TestCase):
         ):
             result = apple_auth()
 
-            self.assertEqual(result, self.mock_headers)
+            assert result == self.mock_headers
             mock_message.assert_called_with("a+", "Successfully Authenticated")
 
     @patch("builtins.open", side_effect=FileNotFoundError)
@@ -170,10 +170,10 @@ class TestAppleFunctions(unittest.TestCase):
 
         result = apple_is_logged_in("Bearer test_token", "test_media_token")
 
-        self.assertIsNotNone(result)
-        self.assertIsInstance(result, dict)
-        self.assertIn("Authorization", result)
-        self.assertIn("Media-User-Token", result)
+        assert result is not None
+        assert isinstance(result, dict)
+        assert "Authorization" in result
+        assert "Media-User-Token" in result
 
     @patch("requests.get")
     def test_apple_is_logged_in_failure(self, mock_get):
@@ -184,7 +184,7 @@ class TestAppleFunctions(unittest.TestCase):
 
         result = apple_is_logged_in("Bearer invalid_token", "invalid_media_token")
 
-        self.assertFalse(result)
+        assert not result
 
     @patch("requests.get")
     def test_get_apple_playlists(self, mock_get):
@@ -223,8 +223,8 @@ class TestAppleFunctions(unittest.TestCase):
         }
         expected_folders = {"f.789": "Electronic Music"}
 
-        self.assertEqual(playlists, expected_playlists)
-        self.assertEqual(folders, expected_folders)
+        assert playlists == expected_playlists
+        assert folders == expected_folders
 
     @patch("requests.get")
     def test_get_apple_playlists_no_folders(self, mock_get):
@@ -252,8 +252,8 @@ class TestAppleFunctions(unittest.TestCase):
         expected_playlists = {"My Rock Playlist": "p.123"}
         expected_folders = {}
 
-        self.assertEqual(playlists, expected_playlists)
-        self.assertEqual(folders, expected_folders)
+        assert playlists == expected_playlists
+        assert folders == expected_folders
 
     @patch("requests.get")
     def test_get_apple_playlists_api_failure(self, mock_get):
@@ -264,8 +264,8 @@ class TestAppleFunctions(unittest.TestCase):
 
         playlists, folders = get_apple_playlists(self.mock_headers)
 
-        self.assertEqual(playlists, {})
-        self.assertEqual(folders, {})
+        assert playlists == {}
+        assert folders == {}
 
     def test_apple_dest_check_existing_playlist(self):
         """Test checking for existing destination playlist."""
@@ -274,7 +274,7 @@ class TestAppleFunctions(unittest.TestCase):
         with patch("src.applefuncs.message") as mock_message:
             result = apple_dest_check(playlists, self.mock_headers, "Test Playlist")
 
-            self.assertEqual(result, "p.123")
+            assert result == "p.123"
             mock_message.assert_called_with(
                 "a+", "Playlist exists, adding missing songs"
             )
@@ -288,7 +288,7 @@ class TestAppleFunctions(unittest.TestCase):
         with patch("src.applefuncs.message") as mock_message:
             result = apple_dest_check(playlists, self.mock_headers, "New Playlist")
 
-            self.assertEqual(result, "p.new123")
+            assert result == "p.new123"
             mock_create.assert_called_with("New Playlist", self.mock_headers)
             mock_message.assert_called_with("a+", "Playlist created")
 
@@ -306,7 +306,7 @@ class TestAppleFunctions(unittest.TestCase):
             "A Night at the Opera&@#72Bohemian Rhapsody&@#72Queen",
             "Led Zeppelin IV&@#72Stairway to Heaven&@#72Led Zeppelin",
         ]
-        self.assertEqual(result, expected)
+        assert result == expected
 
     @patch("requests.get")
     def test_get_apple_playlist_content_empty(self, mock_get):
@@ -318,7 +318,7 @@ class TestAppleFunctions(unittest.TestCase):
 
         result = get_apple_playlist_content(self.mock_headers, "p.123")
 
-        self.assertEqual(result, [])
+        assert result == []
 
     @patch("requests.get")
     def test_get_apple_playlist_content_api_failure(self, mock_get):
@@ -332,7 +332,7 @@ class TestAppleFunctions(unittest.TestCase):
 
         result = get_apple_playlist_content(self.mock_headers, "p.123")
 
-        self.assertEqual(result, [])
+        assert result == []
 
     @patch("src.applefuncs.get_apple_playlist_content")
     @patch("src.applefuncs.what_to_move")
@@ -378,7 +378,7 @@ class TestAppleFunctions(unittest.TestCase):
             patch("src.applefuncs.compare", return_value=True),
             patch("src.applefuncs.sleep"),
         ):
-            result = move_to_apple(
+            move_to_apple(
                 self.mock_headers, playlist_info, "p.123", "Test Playlist"
             )
 
@@ -407,7 +407,7 @@ class TestAppleFunctions(unittest.TestCase):
         )
 
         # Should return the song that wasn't found
-        self.assertEqual(result, ["Unknown Album Unknown Song Unknown Artist"])
+        assert result == ["Unknown Album Unknown Song Unknown Artist"]
 
     @patch("src.applefuncs.get_apple_playlist_content")
     @patch("src.applefuncs.what_to_move")
@@ -448,12 +448,12 @@ class TestAppleFunctions(unittest.TestCase):
             patch("src.applefuncs.sleep"),
             patch("src.applefuncs.appleapi_add_playlist_item"),
         ):
-            result = move_to_apple(
+            move_to_apple(
                 self.mock_headers, playlist_info, "p.123", "Test Playlist"
             )
 
             # Should have called search twice (with and without parentheses)
-            self.assertEqual(mock_search.call_count, 2)
+            assert mock_search.call_count == 2
 
     @patch("sys.exit")
     def test_move_to_apple_keyboard_interrupt(self, mock_exit):
@@ -480,7 +480,7 @@ class TestAppleFunctions(unittest.TestCase):
             "Test Playlist", "Test Description", self.mock_headers
         )
 
-        self.assertEqual(result, "p.new123")
+        assert result == "p.new123"
         mock_post.assert_called_once()
 
     @patch("requests.get")
@@ -495,7 +495,7 @@ class TestAppleFunctions(unittest.TestCase):
 
         result = appleapi_music_search("Bohemian Rhapsody", self.mock_headers)
 
-        self.assertEqual(result, self.mock_search_response)
+        assert result == self.mock_search_response
         mock_get.assert_called_once()
 
     @patch("requests.post")
@@ -525,7 +525,7 @@ class TestAppleFunctions(unittest.TestCase):
 
         result = appleapi_get_folder_info("f.123", self.mock_headers)
 
-        self.assertEqual(result, "Test Folder")
+        assert result == "Test Folder"
 
     @patch("requests.get")
     def test_appleapi_get_folder_info_not_found(self, mock_get):
@@ -538,7 +538,7 @@ class TestAppleFunctions(unittest.TestCase):
 
         result = appleapi_get_folder_info("f.nonexistent", self.mock_headers)
 
-        self.assertIsNone(result)
+        assert result is None
 
 
 if __name__ == "__main__":

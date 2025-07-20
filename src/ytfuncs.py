@@ -14,7 +14,7 @@ def ytmusic_auth():
         ytmusic = YTMusic(ytfile)
         message("y+", "Successfully Authenticated")
         return ytmusic
-    except:
+    except Exception:
         message("y+", "Authentication failed")
         sys.exit(0)
 
@@ -48,7 +48,7 @@ def get_yt_playlist_content(ytmusic, source_id):
         song_name = song["title"]
         try:
             album_name = song["album"]["name"]
-        except:
+        except KeyError:
             album_name = ""
         artist_name = []
         for i in song["artists"]:

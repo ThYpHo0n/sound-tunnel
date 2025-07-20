@@ -40,8 +40,8 @@ def get_spotify_playlists(spotify):
             playlist_id = i["id"]
             # Add playlist name and ids to dictionary
             spfy_lists[playlist_name] = playlist_id
-    except:
-        # Triggered for non-songs
+    except KeyError:
+        # Triggered for malformed response
         pass
     return spfy_lists
 
@@ -108,12 +108,12 @@ def move_to_spfy(spotify, playlist_info, dest_id, playlist_name):
             i = i.replace("&@#72", " ")
             try:
                 search = spotify.search(i, limit=5, type="track")
-            except:
+            except Exception:
                 bk = i
                 i = re.sub(r"\(.*?\)", "", i)
                 try:
                     search = spotify.search(i, limit=5, type="track")
-                except:
+                except Exception:
                     not_found.append(bk)
                     continue
             for song in search["tracks"]["items"]:
@@ -136,5 +136,5 @@ def move_to_spfy(spotify, playlist_info, dest_id, playlist_name):
     except KeyboardInterrupt:
         print("\n[!] Operation cancelled by user.")
         sys.exit(0)
-    except:
+    except Exception:
         return not_found

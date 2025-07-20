@@ -122,7 +122,7 @@ class TestSpotifyFunctions(unittest.TestCase):
         with patch("src.spfyfuncs.message") as mock_message:
             result = spotify_auth()
 
-            self.assertEqual(result, mock_spotify_instance)
+            assert result == mock_spotify_instance
             mock_message.assert_called_with("s+", "Successfully Authenticated")
 
     @patch("src.spfyfuncs.spotipy.Spotify")
@@ -151,7 +151,7 @@ class TestSpotifyFunctions(unittest.TestCase):
             "Rock Collection": "playlist_456",
             "Chill Vibes": "playlist_789",
         }
-        self.assertEqual(result, expected)
+        assert result == expected
         self.mock_spotify.current_user_playlists.assert_called_once()
 
     def test_get_spotify_playlists_empty(self):
@@ -160,7 +160,7 @@ class TestSpotifyFunctions(unittest.TestCase):
 
         result = get_spotify_playlists(self.mock_spotify)
 
-        self.assertEqual(result, {})
+        assert result == {}
 
     def test_get_spotify_playlists_malformed_response(self):
         """Test handling malformed response when retrieving playlists."""
@@ -173,7 +173,7 @@ class TestSpotifyFunctions(unittest.TestCase):
         result = get_spotify_playlists(self.mock_spotify)
 
         # Should return empty dict when items don't have expected keys
-        self.assertEqual(result, {})
+        assert result == {}
 
     def test_get_spfy_likes(self):
         """Test retrieving Spotify liked songs."""
@@ -188,7 +188,7 @@ class TestSpotifyFunctions(unittest.TestCase):
             "Imagine&@#72Imagine&@#72John Lennon",
             "Hotel California&@#72Hotel California&@#72Eagles",
         ]
-        self.assertEqual(result, expected)
+        assert result == expected
 
     def test_get_spfy_likes_multiple_artists(self):
         """Test liked songs with multiple artists."""
@@ -209,7 +209,7 @@ class TestSpotifyFunctions(unittest.TestCase):
         result = get_spfy_likes(self.mock_spotify)
 
         expected = ["Hot Space&@#72Under Pressure&@#72Queen David Bowie"]
-        self.assertEqual(result, expected)
+        assert result == expected
 
     def test_spfy_dest_check_existing_playlist(self):
         """Test checking for existing destination playlist."""
@@ -220,7 +220,7 @@ class TestSpotifyFunctions(unittest.TestCase):
                 playlists, self.mock_spotify, self.mock_user_id, "Test Playlist"
             )
 
-            self.assertEqual(result, "playlist_123")
+            assert result == "playlist_123"
             mock_message.assert_called_with(
                 "s+", "Playlist exists, adding missing songs"
             )
@@ -236,7 +236,7 @@ class TestSpotifyFunctions(unittest.TestCase):
                 playlists, self.mock_spotify, self.mock_user_id, "New Playlist"
             )
 
-            self.assertEqual(result, "new_playlist_123")
+            assert result == "new_playlist_123"
             self.mock_spotify.user_playlist_create.assert_called_with(
                 self.mock_user_id,
                 "New Playlist",
@@ -271,7 +271,7 @@ class TestSpotifyFunctions(unittest.TestCase):
             patch("src.spfyfuncs.compare", return_value=True),
             patch("src.spfyfuncs.sleep"),
         ):
-            result = move_to_spfy(
+            move_to_spfy(
                 self.mock_spotify, playlist_info, "playlist_123", "Test Playlist"
             )
 
@@ -299,7 +299,7 @@ class TestSpotifyFunctions(unittest.TestCase):
         )
 
         # Should return the song that wasn't found
-        self.assertEqual(result, ["Unknown Album Unknown Song Unknown Artist"])
+        assert result == ["Unknown Album Unknown Song Unknown Artist"]
 
     @patch("sys.exit")
     def test_move_to_spfy_keyboard_interrupt(self, mock_exit):
