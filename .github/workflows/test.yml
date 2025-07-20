@@ -41,7 +41,6 @@ jobs:
         ruff check .
         # Run ruff formatter check
         ruff format --check .
-      continue-on-error: true
 
     - name: Test with pytest
       run: |
