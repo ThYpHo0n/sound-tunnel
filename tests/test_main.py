@@ -181,9 +181,7 @@ class TestMainFunctions(unittest.TestCase):
     def test_compare_partial_match(self):
         """Test compare function with partial match above threshold."""
         # Both have common words but different enough
-        compare(
-            "Queen Bohemian Rhapsody Rock", "Queen Another One Bites Dust Rock"
-        )
+        compare("Queen Bohemian Rhapsody Rock", "Queen Another One Bites Dust Rock")
         # This might pass or fail depending on the similarity - testing the actual behavior
         # The function should return consistent results
 

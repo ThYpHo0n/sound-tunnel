@@ -378,9 +378,7 @@ class TestAppleFunctions(unittest.TestCase):
             patch("src.applefuncs.compare", return_value=True),
             patch("src.applefuncs.sleep"),
         ):
-            move_to_apple(
-                self.mock_headers, playlist_info, "p.123", "Test Playlist"
-            )
+            move_to_apple(self.mock_headers, playlist_info, "p.123", "Test Playlist")
 
             # Should call add song to playlist
             mock_add_song.assert_called()
@@ -448,9 +446,7 @@ class TestAppleFunctions(unittest.TestCase):
             patch("src.applefuncs.sleep"),
             patch("src.applefuncs.appleapi_add_playlist_item"),
         ):
-            move_to_apple(
-                self.mock_headers, playlist_info, "p.123", "Test Playlist"
-            )
+            move_to_apple(self.mock_headers, playlist_info, "p.123", "Test Playlist")
 
             # Should have called search twice (with and without parentheses)
             assert mock_search.call_count == 2
