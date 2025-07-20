@@ -97,27 +97,8 @@ def apple_dest_check(apple_lists, apple, dest_playlist_name):
       message("a+", "Playlist exists, adding missing songs")
       return dest_playlist_id
 
-   if '/' in dest_playlist_name:
-      folder_name, new_playlist_name = dest_playlist_name.split('/', 1)
-
-      _, folders = get_apple_playlists(apple)
-
-      folder_id = None
-      for id, name in folders.items():
-          if name == folder_name:
-              folder_id = id
-              break
-
-      if folder_id is None:
-         folder_id = appleapi_create_playlist_folder(folder_name, apple)
-         message("a+", f"Created folder {folder_name}")
-
-      dest_playlist_id = appleapi_create_playlist(new_playlist_name, apple, parent_folder_id=folder_id)
-      message("a+", f"Playlist {new_playlist_name} created in folder {folder_name}")
-
-   else:
-      dest_playlist_id = appleapi_create_playlist(dest_playlist_name, apple)
-      message("a+", "Playlist created")
+   dest_playlist_id = appleapi_create_playlist(dest_playlist_name, apple)
+   message("a+", "Playlist created")
    return dest_playlist_id
 
 def appleapi_create_playlist_folder(folder_name, headers):
